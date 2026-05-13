@@ -1,0 +1,14 @@
+Place sound files here (referenced by src/lib/audio/index.ts):
+
+  wheel-spin.mp3       — looping spin sound, ~5 sec
+  wheel-stop.mp3       — sharp landing thump
+  reveal.mp3           — dramatic reveal sting
+  correct.mp3          — positive ding
+  wrong.mp3            — buzzer / negative chord
+  confetti.mp3         — celebration burst
+  mission.mp3          — secret-mission tension cue
+  tick.mp3             — countdown tick
+  background-loop.mp3  — quiet looping bed
+
+The app handles missing files gracefully (play() rejects, swallowed), so it runs
+fine without these. Add real files before going live.

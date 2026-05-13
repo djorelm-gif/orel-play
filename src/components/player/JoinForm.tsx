@@ -1,0 +1,308 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { OrelEvent } from '@/types/event';
+
+type Step = 'name' | 'photo' | 'greeting' | 'done';
+
+interface Props {
+  event: OrelEvent;
+}
+
+const STORAGE_KEY = 'orelplay.session';
+
+export function JoinForm({ event }: Props) {
+  const router = useRouter();
+  const [step, setStep] = useState<Step>('name');
+  const [name, setName] = useState('');
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [greeting, setGreeting] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [, setPlayerId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // restore prior session for this event
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`${STORAGE_KEY}.${event.event_code}`);
+      if (raw) {
+        const data = JSON.parse(raw) as { token: string; playerId: string };
+        setSessionToken(data.token);
+        setPlayerId(data.playerId);
+        // already joined → jump to /play
+        router.replace(`/play/${event.event_code}`);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [event.event_code, router]);
+
+  async function submitName() {
+    setError(null);
+    if (name.trim().length < 2) {
+      setError('שם קצר מדי (לפחות 2 תווים)');
+      return;
+    }
+    setStep('photo');
+  }
+
+  async function handlePhoto(file: File | null) {
+    if (!file) return;
+    if (file.size > 4_500_000) {
+      setError('התמונה גדולה מדי (עד 4MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = reader.result as string;
+      setPhotoDataUrl(url);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function commitJoin(): Promise<{ token: string; playerId: string } | null> {
+    setBusy(true);
+    setError(null);
+    try {
+      // TODO production: upload photo blob to Supabase Storage and pass the resulting URL.
+      // MVP/demo: store data URL inline. Fine for small payloads.
+      const res = await fetch(`/api/events/${event.event_code}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: name.trim(), photo_url: photoDataUrl ?? undefined }),
+      });
+      const data = (await res.json()) as
+        | { player: { id: string }; session_token: string }
+        | { error: string };
+      if (!res.ok || 'error' in data) {
+        setError(('error' in data && data.error) || 'נכשל ההצטרפות');
+        return null;
+      }
+      localStorage.setItem(
+        `${STORAGE_KEY}.${event.event_code}`,
+        JSON.stringify({ token: data.session_token, playerId: data.player.id }),
+      );
+      setSessionToken(data.session_token);
+      setPlayerId(data.player.id);
+      return { token: data.session_token, playerId: data.player.id };
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'נכשל ההצטרפות');
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitGreeting(joined?: { token: string }) {
+    setBusy(true);
+    setError(null);
+    try {
+      const token = joined?.token ?? sessionToken;
+      const res = await fetch(`/api/events/${event.event_code}/greetings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_token: token,
+          display_name: name.trim(),
+          message: greeting.trim(),
+          photo_url: photoDataUrl ?? undefined,
+        }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error || 'נכשל לשלוח את הברכה');
+        return;
+      }
+      setStep('done');
+      setTimeout(() => router.push(`/play/${event.event_code}`), 1200);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'נכשל לשלוח את הברכה');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleGreetingNext() {
+    if (greeting.trim().length < 2) {
+      setError('הברכה קצרה מדי');
+      return;
+    }
+    // Commit player first if not yet, then submit greeting
+    if (!sessionToken) {
+      const joined = await commitJoin();
+      if (!joined) return;
+      await submitGreeting(joined);
+    } else {
+      await submitGreeting();
+    }
+  }
+
+  const progress = useMemo(() => {
+    if (step === 'name') return 25;
+    if (step === 'photo') return 60;
+    if (step === 'greeting') return 90;
+    return 100;
+  }, [step]);
+
+  return (
+    <div className="min-h-screen flex flex-col stage-vignette p-5">
+      <header className="flex items-center justify-between">
+        <div className="chip">
+          <span className="size-2 rounded-full bg-success animate-pulse" />
+          <span className="tracking-[0.3em]">OREL · LIVE</span>
+        </div>
+        <div className="text-sm text-muted">
+          קוד: <span className="text-gold font-bold tracking-widest">{event.event_code}</span>
+        </div>
+      </header>
+
+      <div className="flex-1 flex items-center justify-center py-6">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-display font-black gold-shimmer">
+              נכנסים לחגיגה של {event.child_name}
+            </h1>
+            <p className="text-muted">3 צעדים קצרים ואת/ה בפנים</p>
+            <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mt-3">
+              <div
+                className="h-full bg-gold-gradient transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {step === 'name' && (
+              <motion.div
+                key="name"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="panel-strong p-6 space-y-4"
+              >
+                <label className="block">
+                  <span className="text-sm text-muted">איך קוראים לך?</span>
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="mt-1 w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-xl"
+                    placeholder="לדוגמה: שירה"
+                    maxLength={30}
+                  />
+                </label>
+                {error && <div className="text-danger text-sm">{error}</div>}
+                <button className="btn-gold w-full text-lg py-4" onClick={submitName}>
+                  המשך →
+                </button>
+              </motion.div>
+            )}
+
+            {step === 'photo' && (
+              <motion.div
+                key="photo"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="panel-strong p-6 space-y-4"
+              >
+                <div className="text-center space-y-1">
+                  <div className="text-xl font-bold">תמונה לזיהוי</div>
+                  <div className="text-muted text-sm">תופיע ליד הברכה שלך במסך הגדול</div>
+                </div>
+
+                <div className="flex flex-col items-center gap-4">
+                  <div
+                    className="size-40 rounded-full overflow-hidden bg-white/8 ring-4 ring-gold/40 shadow-gold-glow flex items-center justify-center"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {photoDataUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={photoDataUrl} alt="preview" className="size-full object-cover" />
+                    ) : (
+                      <div className="text-5xl">📷</div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    className="hidden"
+                    onChange={(e) => handlePhoto(e.target.files?.[0] ?? null)}
+                  />
+                  <button className="btn-gold-outline" onClick={() => fileInputRef.current?.click()}>
+                    {photoDataUrl ? 'החלף תמונה' : 'צלם/י סלפי'}
+                  </button>
+                </div>
+
+                {error && <div className="text-danger text-sm">{error}</div>}
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="btn-ghost" onClick={() => setStep('name')}>
+                    ← חזור
+                  </button>
+                  <button className="btn-gold" onClick={() => setStep('greeting')}>
+                    {photoDataUrl ? 'המשך' : 'דלג ←'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'greeting' && (
+              <motion.div
+                key="greeting"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="panel-strong p-6 space-y-4"
+              >
+                <label className="block">
+                  <span className="text-sm text-muted">ברכה ל{event.child_name}</span>
+                  <textarea
+                    autoFocus
+                    value={greeting}
+                    onChange={(e) => setGreeting(e.target.value)}
+                    rows={4}
+                    maxLength={280}
+                    className="mt-1 w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-3 text-lg resize-none"
+                    placeholder="כתבו ברכה חמה ומצחיקה..."
+                  />
+                  <div className="mt-1 text-xs text-muted text-end">{greeting.length}/280</div>
+                </label>
+                <div className="panel p-3 text-xs text-muted">
+                  ⚠ הברכה תעבור אישור של המנחה לפני שתופיע במסך הגדול. בלי לשמות פוגעניים, מספרי טלפון או קישורים.
+                </div>
+                {error && <div className="text-danger text-sm">{error}</div>}
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="btn-ghost" onClick={() => setStep('photo')}>
+                    ← חזור
+                  </button>
+                  <button className="btn-gold" disabled={busy} onClick={handleGreetingNext}>
+                    {busy ? 'שולח...' : 'שלח ברכה ✨'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 'done' && (
+              <motion.div
+                key="done"
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="panel-strong p-8 text-center space-y-3"
+              >
+                <div className="text-6xl">🎉</div>
+                <div className="text-2xl font-display font-black gold-shimmer">נכנסת למשחק!</div>
+                <div className="text-muted">תכף מעבירים אותך למסך ההמתנה</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #050506;
+  --panel: rgba(255, 255, 255, 0.07);
+  --panel-strong: rgba(255, 255, 255, 0.12);
+  --gold: #d8a84e;
+  --gold-light: #ffe7a3;
+  --magenta: #d82dff;
+  --purple: #7b2cff;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.68);
+  --danger: #ff3b6b;
+  --success: #47ffb2;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+}
+
+html[dir='rtl'] body {
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+::selection {
+  background: rgba(216, 168, 78, 0.55);
+  color: #050506;
+}
+
+@layer components {
+  .text-gold-gradient {
+    background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-magenta-gradient {
+    background: linear-gradient(135deg, #ffe7a3 0%, #d82dff 60%, #7b2cff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+  }
+
+  .panel-strong {
+    background: var(--panel-strong);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    border-radius: 24px;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gold/60 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-gold {
+    @apply btn text-black;
+    background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
+    box-shadow: 0 0 30px rgba(216, 168, 78, 0.35);
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 50px rgba(216, 168, 78, 0.55);
+    transform: translateY(-1px);
+  }
+
+  .btn-gold-outline {
+    @apply btn text-gold-light;
+    background: rgba(255, 231, 163, 0.04);
+    border: 1px solid rgba(255, 231, 163, 0.55);
+  }
+  .btn-gold-outline:hover {
+    background: rgba(255, 231, 163, 0.1);
+    border-color: rgba(255, 231, 163, 0.9);
+  }
+
+  .btn-magenta {
+    @apply btn text-white;
+    background: linear-gradient(135deg, #d82dff 0%, #7b2cff 100%);
+    box-shadow: 0 0 35px rgba(216, 45, 255, 0.45);
+  }
+  .btn-magenta:hover {
+    box-shadow: 0 0 60px rgba(216, 45, 255, 0.6);
+  }
+
+  .btn-ghost {
+    @apply btn text-white/85;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .btn-danger {
+    @apply btn text-white;
+    background: linear-gradient(135deg, #ff3b6b 0%, #b8123c 100%);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold tracking-wide;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .stage-vignette {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(216, 45, 255, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 90%, rgba(216, 168, 78, 0.12) 0%, transparent 70%),
+      #050506;
+  }
+
+  .gold-shimmer {
+    background:
+      linear-gradient(
+        90deg,
+        rgba(255, 231, 163, 0) 0%,
+        rgba(255, 231, 163, 0.85) 50%,
+        rgba(255, 231, 163, 0) 100%
+      ),
+      linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
+    background-size: 200% 100%, 100% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+
+  .scrollbar-fancy::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-fancy::-webkit-scrollbar-thumb {
+    background: rgba(216, 168, 78, 0.35);
+    border-radius: 8px;
+  }
+  .scrollbar-fancy::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  .stage-headline {
+    font-size: clamp(48px, 7vw, 120px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-weight: 900;
+  }
+  .stage-subheadline {
+    font-size: clamp(20px, 2.2vw, 36px);
+    line-height: 1.2;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+}
