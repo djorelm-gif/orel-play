@@ -27,16 +27,18 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
   const segCount = Math.max(segments.length, 1);
   const segAngle = 360 / segCount;
 
-  // Build a single conic gradient with alternating gold/magenta hues
+  // Build a single conic gradient with alternating accent shades, themed via CSS vars
   const conic = useMemo(() => {
-    const hues = ['#3b1e6a', '#5a1a8a', '#3b1e6a', '#7a1565'];
+    // Mix dark backdrop with current accent at varying intensities so it adapts to bat/bar
     const stops: string[] = [];
     for (let i = 0; i < segCount; i++) {
       const from = i * segAngle;
       const to = (i + 1) * segAngle;
-      stops.push(`${hues[i % hues.length]} ${from}deg ${to}deg`);
+      // Alternate two depths of the active accent
+      const layer = i % 2 === 0 ? 'rgb(var(--accent-2-rgb) / 0.55)' : 'rgb(var(--accent-rgb) / 0.45)';
+      stops.push(`${layer} ${from}deg ${to}deg`);
     }
-    return `conic-gradient(from -90deg, ${stops.join(', ')})`;
+    return `conic-gradient(from -90deg, ${stops.join(', ')}), #1a0f2b`;
   }, [segCount, segAngle]);
 
   useEffect(() => {
@@ -75,7 +77,7 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
         className="absolute -inset-8 rounded-full opacity-70 blur-2xl"
         style={{
           background:
-            'conic-gradient(from 0deg, rgba(216,168,78,0.5), rgba(216,45,255,0.5), rgba(123,44,255,0.5), rgba(216,168,78,0.5))',
+            'conic-gradient(from 0deg, rgba(216,168,78,0.5), rgb(var(--accent-rgb) / 0.5), rgb(var(--accent-2-rgb) / 0.5), rgba(216,168,78,0.5))',
         }}
       />
 

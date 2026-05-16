@@ -10,7 +10,12 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const body = (await req.json()) as { name?: string; child_name?: string; venue?: string };
+  const body = (await req.json()) as {
+    name?: string;
+    child_name?: string;
+    venue?: string;
+    event_type?: 'bat_mitzvah' | 'bar_mitzvah';
+  };
   if (!body.name || !body.child_name) {
     return NextResponse.json({ error: 'name and child_name required' }, { status: 400 });
   }
@@ -18,6 +23,7 @@ export async function POST(req: Request) {
     name: body.name,
     child_name: body.child_name,
     venue: body.venue,
+    event_type: body.event_type === 'bar_mitzvah' ? 'bar_mitzvah' : 'bat_mitzvah',
     event_code: randomCode(6),
   });
   return NextResponse.json({ event });

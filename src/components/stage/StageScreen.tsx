@@ -10,6 +10,7 @@ import { WheelStage } from './WheelStage';
 import { Confetti } from '@/components/ui/Confetti';
 import { MuteToggle } from '@/components/ui/MuteToggle';
 import { FullscreenButton } from '@/components/ui/FullscreenButton';
+import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { confirmWheelStop } from '@/lib/game-engine/host-actions';
 import { getAudio } from '@/lib/audio';
@@ -86,6 +87,7 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden font-sans text-white">
+      <ThemeApplier eventType={snap.event.event_type} />
       <StageBackdrop />
 
       <AnimatePresence mode="wait">

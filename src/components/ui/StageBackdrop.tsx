@@ -14,7 +14,7 @@ export function StageBackdrop() {
         transition={{ duration: 28, ease: 'linear', repeat: Infinity }}
         style={{
           background:
-            'conic-gradient(from 0deg, transparent 0deg, rgba(216,45,255,0.35) 20deg, transparent 40deg, transparent 180deg, rgba(216,168,78,0.35) 200deg, transparent 220deg, transparent 360deg)',
+            'conic-gradient(from 0deg, transparent 0deg, rgb(var(--accent-rgb) / 0.35) 20deg, transparent 40deg, transparent 180deg, rgba(216,168,78,0.35) 200deg, transparent 220deg, transparent 360deg)',
         }}
       />
       <div

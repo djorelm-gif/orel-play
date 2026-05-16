@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePolledResource } from '@/lib/realtime/hooks';
 import { Avatar } from '@/components/ui/Avatar';
+import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { getAudio } from '@/lib/audio';
 import type { OrelEvent } from '@/types/event';
@@ -111,6 +112,7 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
 
   return (
     <div className="min-h-screen stage-vignette p-4 pb-10">
+      <ThemeApplier eventType={snap.event.event_type} />
       {!online && (
         <div className="mb-3 panel-strong border border-danger/50 p-3 flex items-center gap-2 text-sm">
           <span className="size-2 rounded-full bg-danger animate-pulse" />

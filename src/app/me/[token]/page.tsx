@@ -12,6 +12,7 @@ export default async function MePage({ params }: { params: { token: string } }) 
     <Wizard
       token={params.token}
       childName={event.child_name}
+      eventType={event.event_type}
       initialAnswers={(profile?.answers as Record<string, string | string[]>) ?? {}}
     />
   );

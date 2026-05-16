@@ -49,11 +49,16 @@ export const dataSource = {
     const { data } = await sb.from(T.events).select('*').order('created_at', { ascending: false });
     return (data as OrelEvent[] | null) ?? [];
   },
-  async createEvent(input: { name: string; child_name: string; event_code: string; venue?: string }): Promise<OrelEvent> {
+  async createEvent(input: {
+    name: string;
+    child_name: string;
+    event_code: string;
+    venue?: string;
+    event_type?: 'bat_mitzvah' | 'bar_mitzvah';
+  }): Promise<OrelEvent> {
     const sb = backed();
     if (!sb) return demoStore.createEvent(input);
-    // For Supabase: rely on a trigger to seed event_games + live_session + host_token
-    // (see supabase/migrations/0002_seed_trigger.sql). Until then this insert may need a follow-up.
+    // Trigger seeds host_token + 6 event_games + live_session automatically.
     const { data, error } = await sb.from(T.events).insert(input).select().single();
     if (error) throw new Error(error.message);
     return data as OrelEvent;

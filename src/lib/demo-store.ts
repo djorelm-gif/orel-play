@@ -34,6 +34,7 @@ function makeInitial(): Store {
     event_code: DEMO_EVENT_CODE,
     name: 'בת המצווה של רומי',
     child_name: 'רומי',
+    event_type: 'bat_mitzvah',
     event_date: null,
     venue: 'אולמי הזהב',
     status: 'live',
@@ -246,13 +247,20 @@ export const demoStore = {
     bump();
     return getStore().events[idx];
   },
-  createEvent(input: { name: string; child_name: string; event_code: string; venue?: string }): OrelEvent {
+  createEvent(input: {
+    name: string;
+    child_name: string;
+    event_code: string;
+    venue?: string;
+    event_type?: 'bat_mitzvah' | 'bar_mitzvah';
+  }): OrelEvent {
     const now = new Date().toISOString();
     const event: OrelEvent = {
       id: uid('evt'),
       event_code: input.event_code,
       name: input.name,
       child_name: input.child_name,
+      event_type: input.event_type ?? 'bat_mitzvah',
       event_date: null,
       venue: input.venue ?? null,
       status: 'draft',

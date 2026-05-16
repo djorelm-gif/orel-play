@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WIZARD_PROMPTS, type WizardPrompt, type WizardAnswers } from '@/lib/bat-mitzvah-wizard/questions';
+import { ThemeApplier } from '@/components/ui/ThemeApplier';
+import type { EventType } from '@/types/event';
 
 interface Props {
   token: string;
   childName: string;
+  eventType: EventType;
   initialAnswers: WizardAnswers;
   initialIndex?: number;
 }
 
-export function Wizard({ token, childName, initialAnswers, initialIndex = 0 }: Props) {
+export function Wizard({ token, childName, eventType, initialAnswers, initialIndex = 0 }: Props) {
   const [idx, setIdx] = useState(initialIndex);
   const [answers, setAnswers] = useState<WizardAnswers>(initialAnswers);
   const [busy, setBusy] = useState(false);
@@ -76,11 +79,17 @@ export function Wizard({ token, childName, initialAnswers, initialIndex = 0 }: P
   }
 
   if (done) {
-    return <DoneScreen childName={childName} />;
+    return (
+      <>
+        <ThemeApplier eventType={eventType} />
+        <DoneScreen childName={childName} />
+      </>
+    );
   }
 
   return (
     <div className="min-h-screen stage-vignette p-5 flex flex-col">
+      <ThemeApplier eventType={eventType} />
       <header className="flex items-center justify-between">
         <div className="chip">
           <span className="size-2 rounded-full bg-gold animate-pulse" />

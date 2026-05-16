@@ -2,18 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme='bat_mitzvah'] {
   --bg: #050506;
   --panel: rgba(255, 255, 255, 0.07);
   --panel-strong: rgba(255, 255, 255, 0.12);
   --gold: #d8a84e;
   --gold-light: #ffe7a3;
-  --magenta: #d82dff;
-  --purple: #7b2cff;
   --text: #ffffff;
   --muted: rgba(255, 255, 255, 0.68);
   --danger: #ff3b6b;
   --success: #47ffb2;
+
+  /* Theme accents — bat mitzvah: magenta + purple */
+  --accent-rgb: 216 45 255;   /* #D82DFF */
+  --accent-2-rgb: 123 44 255; /* #7B2CFF */
+  --accent: rgb(var(--accent-rgb));
+  --accent-2: rgb(var(--accent-2-rgb));
+  --magenta: rgb(var(--accent-rgb));  /* legacy alias */
+  --purple: rgb(var(--accent-2-rgb)); /* legacy alias */
+}
+
+[data-theme='bar_mitzvah'] {
+  /* Bar mitzvah: deep royal blue + electric blue */
+  --accent-rgb: 45 79 255;    /* #2D4FFF royal */
+  --accent-2-rgb: 79 184 255; /* #4FB8FF electric */
+  --accent: rgb(var(--accent-rgb));
+  --accent-2: rgb(var(--accent-2-rgb));
+  --magenta: rgb(var(--accent-rgb));
+  --purple: rgb(var(--accent-2-rgb));
 }
 
 html,
@@ -41,7 +58,7 @@ html[dir='rtl'] body {
   }
 
   .text-magenta-gradient {
-    background: linear-gradient(135deg, #ffe7a3 0%, #d82dff 60%, #7b2cff 100%);
+    background: linear-gradient(135deg, #ffe7a3 0%, var(--accent) 60%, var(--accent-2) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -89,11 +106,11 @@ html[dir='rtl'] body {
 
   .btn-magenta {
     @apply btn text-white;
-    background: linear-gradient(135deg, #d82dff 0%, #7b2cff 100%);
-    box-shadow: 0 0 35px rgba(216, 45, 255, 0.45);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow: 0 0 35px rgb(var(--accent-rgb) / 0.45);
   }
   .btn-magenta:hover {
-    box-shadow: 0 0 60px rgba(216, 45, 255, 0.6);
+    box-shadow: 0 0 60px rgb(var(--accent-rgb) / 0.6);
   }
 
   .btn-ghost {
@@ -118,7 +135,7 @@ html[dir='rtl'] body {
 
   .stage-vignette {
     background:
-      radial-gradient(ellipse 80% 60% at 50% 30%, rgba(216, 45, 255, 0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 30%, rgb(var(--accent-rgb) / 0.18) 0%, transparent 60%),
       radial-gradient(ellipse 60% 40% at 50% 90%, rgba(216, 168, 78, 0.12) 0%, transparent 70%),
       #050506;
   }

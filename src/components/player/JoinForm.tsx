@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import type { OrelEvent } from '@/types/event';
 
 type Step = 'name' | 'photo' | 'greeting' | 'done';
@@ -150,6 +151,7 @@ export function JoinForm({ event }: Props) {
 
   return (
     <div className="min-h-screen flex flex-col stage-vignette p-5">
+      <ThemeApplier eventType={event.event_type} />
       <header className="flex items-center justify-between">
         <div className="chip">
           <span className="size-2 rounded-full bg-success animate-pulse" />

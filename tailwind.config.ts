@@ -13,9 +13,11 @@ const config: Config = {
           light: '#FFE7A3',
           dark: '#9C7732',
         },
-        magenta: '#D82DFF',
+        // Theme accents — bound to CSS variables so they swap per event_type
+        // (bat_mitzvah → magenta/purple, bar_mitzvah → royal/electric blue)
+        magenta: 'rgb(var(--accent-rgb) / <alpha-value>)',
         purple: {
-          neon: '#7B2CFF',
+          neon: 'rgb(var(--accent-2-rgb) / <alpha-value>)',
         },
         muted: 'rgba(255,255,255,0.68)',
         danger: '#FF3B6B',
@@ -27,14 +29,16 @@ const config: Config = {
       },
       boxShadow: {
         'gold-glow': '0 0 40px rgba(216, 168, 78, 0.45), 0 0 80px rgba(216, 168, 78, 0.18)',
-        'magenta-glow': '0 0 40px rgba(216, 45, 255, 0.45), 0 0 100px rgba(123, 44, 255, 0.25)',
+        'magenta-glow':
+          '0 0 40px rgb(var(--accent-rgb) / 0.45), 0 0 100px rgb(var(--accent-2-rgb) / 0.25)',
         'panel': '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
       },
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #FFE7A3 0%, #D8A84E 45%, #9C7732 100%)',
-        'magenta-gradient': 'linear-gradient(135deg, #D82DFF 0%, #7B2CFF 100%)',
+        'magenta-gradient':
+          'linear-gradient(135deg, rgb(var(--accent-rgb)) 0%, rgb(var(--accent-2-rgb)) 100%)',
         'stage-vignette':
-          'radial-gradient(ellipse at center, rgba(216,45,255,0.08) 0%, rgba(5,5,6,1) 60%)',
+          'radial-gradient(ellipse at center, rgb(var(--accent-rgb) / 0.08) 0%, rgba(5,5,6,1) 60%)',
       },
       animation: {
         'spin-slow': 'spin 8s linear infinite',

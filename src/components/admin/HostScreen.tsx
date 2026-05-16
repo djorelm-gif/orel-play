@@ -9,6 +9,7 @@ import { GameBuilder } from './GameBuilder';
 import { PlayerList } from './PlayerList';
 import { BatMitzvahLinkCard } from './BatMitzvahLinkCard';
 import { ModerationQueue } from '@/components/moderation/ModerationQueue';
+import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import type { OrelEvent } from '@/types/event';
 import type { Player } from '@/types/player';
@@ -43,6 +44,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
 
   return (
     <div className="min-h-screen p-4 grid grid-cols-12 gap-4 stage-vignette">
+      <ThemeApplier eventType={snap.event.event_type} />
       {/* Top bar */}
       <header className="col-span-12 panel-strong p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
