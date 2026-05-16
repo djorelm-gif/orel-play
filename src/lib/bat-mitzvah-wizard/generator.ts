@@ -1,13 +1,8 @@
 import type { GameType, GameQuestion } from '@/types/game';
 import { getAnswer, getList, type WizardAnswers } from './questions';
+import { generateQuestionsAI, type GeneratedQuestion as AIGen } from './generator-ai';
 
-interface GeneratedQuestion {
-  game_type: GameType;
-  question_text: string;
-  options: Array<{ id: string; label: string }>;
-  correct_answer: string | null;
-  config: Record<string, unknown>;
-}
+export type GeneratedQuestion = AIGen;
 
 const TRUE_FALSE_OPTS = [
   { id: 'true', label: 'נכון' },
@@ -27,7 +22,23 @@ const CHANCE_OPTS = [
   { id: '5', label: '100%' },
 ];
 
-// Turn the girl's interview answers into ~20-30 personalized questions across the games.
+// Try the GPT-powered generator first — it writes personalised, gendered,
+// dor-Z Hebrew using the full profile. Falls back to the deterministic
+// template generator if OpenAI is unavailable or returns an empty/bad payload
+// so the show never lands without questions.
+export async function generateQuestionsForEvent(
+  childName: string,
+  isFemale: boolean,
+  answers: WizardAnswers,
+): Promise<GeneratedQuestion[]> {
+  const ai = await generateQuestionsAI(childName, isFemale, answers);
+  if (ai && ai.length >= 10) return ai;
+  return generateQuestions(childName, answers);
+}
+
+// Deterministic template generator — kept as a fallback and for the demo
+// store. Hebrew here is feminine-leaning (legacy from when the app was bat-
+// mitzvah only); the AI generator is what runs in production.
 export function generateQuestions(childName: string, answers: WizardAnswers): GeneratedQuestion[] {
   const name = childName.trim() || 'הילדה';
   const out: GeneratedQuestion[] = [];

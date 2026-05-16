@@ -26,11 +26,15 @@ export async function POST(req: Request, ctx: { params: { token: string } }) {
   const profile = await dataSource.upsertProfile(event.id, body.answers, Boolean(body.complete));
 
   if (body.complete) {
-    // Generate game questions from the answers
-    const { generateQuestions, buildQuestionRows } = await import('@/lib/bat-mitzvah-wizard/generator');
+    // AI-generated, personalised, gendered questions (falls back to the
+    // deterministic template generator if OpenAI is unavailable).
+    const { generateQuestionsForEvent, buildQuestionRows } = await import(
+      '@/lib/bat-mitzvah-wizard/generator'
+    );
     const eventGames = await dataSource.listEventGames(event.id);
     const byType = Object.fromEntries(eventGames.map((g) => [g.game_type, g.id]));
-    const generated = generateQuestions(event.child_name, profile.answers);
+    const isFemale = event.event_type !== 'bar_mitzvah';
+    const generated = await generateQuestionsForEvent(event.child_name, isFemale, profile.answers);
     const rows = buildQuestionRows(generated, byType as Parameters<typeof buildQuestionRows>[1]);
 
     // Group by event_game_id and replace
