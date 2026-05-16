@@ -5,6 +5,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Greeting } from '@/types/greeting';
 import { Avatar } from '@/components/ui/Avatar';
+import { Logo } from '@/components/ui/Logo';
 
 interface Props {
   greetings: Greeting[];
@@ -15,19 +16,17 @@ interface Props {
 
 const MAX_BUBBLES = 8;
 
-// Anchor points across the canvas. Each new bubble grabs the next index in
-// order, so the most recent message lands first / centre and pushes older
-// ones outward, but the layout still feels organically scattered (gaps + odd
-// angles, not a grid).
+// Bubble anchor points across the LOWER 65% of the canvas — the top is reserved
+// for the hero (title + QR) so the title stays prominent like JoinScreen does.
 const SPOTS: { left: string; top: string; rotate: number }[] = [
-  { left: '50%', top: '45%', rotate: -2 },   // most prominent — newest goes here
-  { left: '26%', top: '58%', rotate: 1.5 },
-  { left: '72%', top: '40%', rotate: -1 },
-  { left: '38%', top: '76%', rotate: 2 },
-  { left: '62%', top: '72%', rotate: -2 },
-  { left: '20%', top: '36%', rotate: 1 },
-  { left: '80%', top: '64%', rotate: -1.5 },
-  { left: '45%', top: '28%', rotate: 1.8 },
+  { left: '50%', top: '62%', rotate: -2 },   // newest — front and centre
+  { left: '24%', top: '70%', rotate: 1.5 },
+  { left: '76%', top: '60%', rotate: -1 },
+  { left: '38%', top: '86%', rotate: 2 },
+  { left: '62%', top: '88%', rotate: -2 },
+  { left: '16%', top: '52%', rotate: 1 },
+  { left: '84%', top: '78%', rotate: -1.5 },
+  { left: '50%', top: '46%', rotate: 1.8 },
 ];
 
 function Bubble({
@@ -125,39 +124,71 @@ export function GreetingsWall({ greetings, childName, joinUrl, eventCode }: Prop
 
   return (
     <div className="relative z-10 h-full overflow-hidden">
-      {/* Top-right: child title */}
-      <div className="absolute top-8 right-8 z-20 text-end">
-        <h1
-          className="font-display gold-shimmer leading-[0.95]"
-          style={{ fontSize: 'clamp(48px, 6.4vw, 110px)' }}
-        >
-          ברכות ל{childName}
-        </h1>
-      </div>
-
-      {/* Top-left: QR + event code (replaces the old description) */}
-      <div className="absolute top-8 left-8 z-20">
-        <div className="panel-strong p-4 flex items-center gap-4">
-          <div className="rounded-2xl bg-white p-2 shadow-gold-glow">
-            <QRCodeSVG
-              value={joinUrl}
-              size={140}
-              level="M"
-              bgColor="#FFFFFF"
-              fgColor="#050506"
-            />
-          </div>
-          <div className="space-y-1">
-            <div className="text-xs text-muted">קוד הצטרפות</div>
-            <div className="text-3xl font-display font-black tracking-[0.35em] text-gold leading-none">
-              {eventCode}
+      {/* Hero strip — mirrors the JoinScreen hero so the two stages share a
+          consistent premium look: QR card with halo on the left, big gold-shimmer
+          title + live chip + counter on the right. */}
+      <div className="grid grid-cols-12 gap-12 px-12 py-10 items-center">
+        {/* QR (col-5) — same halo + white panel as JoinScreen, slightly smaller
+            to leave room for the bubble field below. */}
+        <div className="col-span-5 flex justify-center">
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+            className="relative"
+          >
+            <div className="absolute -inset-6 rounded-[40px] bg-gold-gradient opacity-30 blur-2xl" />
+            <div className="relative rounded-[32px] bg-white p-5 shadow-gold-glow">
+              <QRCodeSVG
+                value={joinUrl}
+                size={280}
+                level="M"
+                bgColor="#FFFFFF"
+                fgColor="#050506"
+                includeMargin={false}
+              />
             </div>
-            <div className="text-sm text-muted">סרקו ושלחו ברכה</div>
+            <div className="mt-3 text-center text-sm text-muted">
+              {joinUrl.replace(/^https?:\/\//, '')}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Title + counters (col-7) */}
+        <div className="col-span-7 flex flex-col gap-5 text-end">
+          <div className="space-y-3">
+            <div className="flex items-center justify-end gap-3">
+              <div className="chip">
+                <span className="size-2 rounded-full bg-magenta animate-pulse" />
+                <span className="tracking-[0.3em]">ברכות חיות</span>
+              </div>
+              <Logo size="md" className="h-12" />
+            </div>
+            <h1 className="stage-headline font-display gold-shimmer leading-[0.95]">
+              ברכות ל{childName}
+            </h1>
+            <p className="stage-subheadline text-muted">
+              סרקו את ה-QR ושלחו ברכה — תופיע כאן בזמן אמת
+            </p>
+          </div>
+          <div className="flex items-center gap-4 justify-end">
+            <div className="panel-strong px-5 py-3 flex items-center gap-3">
+              <div className="text-xs text-muted">ברכות שעלו</div>
+              <div className="text-3xl font-display font-black text-gold-light leading-none">
+                {greetings.length}
+              </div>
+            </div>
+            <div className="panel-strong px-5 py-3 flex items-center gap-3">
+              <div className="text-xs text-muted">קוד</div>
+              <div className="text-3xl font-display font-black tracking-[0.35em] text-gold leading-none">
+                {eventCode}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Floating bubbles */}
+      {/* Floating bubbles — anchored to the lower portion of the canvas */}
       <AnimatePresence>
         {ordered.map((g, i) => (
           <Bubble
@@ -171,10 +202,15 @@ export function GreetingsWall({ greetings, childName, joinUrl, eventCode }: Prop
       </AnimatePresence>
 
       {ordered.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="panel-strong px-10 py-8 text-center text-2xl text-muted max-w-xl">
+        <div className="absolute inset-x-0 bottom-[15%] flex justify-center pointer-events-none">
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+            className="panel-strong px-10 py-6 text-center text-2xl text-muted max-w-xl"
+          >
             עדיין לא הגיעו ברכות. סרקו את ה-QR ושלחו את הראשונה 💫
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
