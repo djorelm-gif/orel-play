@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { requestNotificationPermission, persistNotificationOptIn } from '@/lib/notifications';
+import { compressImage } from '@/lib/image';
 import type { OrelEvent } from '@/types/event';
 import type { PlayerGender } from '@/types/player';
 
@@ -60,16 +61,17 @@ export function JoinForm({ event }: Props) {
 
   async function handlePhoto(file: File | null) {
     if (!file) return;
-    if (file.size > 4_500_000) {
-      setError('התמונה גדולה מדי (עד 4MB)');
+    if (file.size > 15_000_000) {
+      setError('התמונה גדולה מדי (עד 15MB)');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      setPhotoDataUrl(url);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Downscale + re-encode so every admin poll doesn't ship a 3MB selfie
+      const dataUrl = await compressImage(file);
+      setPhotoDataUrl(dataUrl);
+    } catch {
+      setError('לא הצלחנו לקרוא את התמונה');
+    }
   }
 
   async function commitJoin(): Promise<{ token: string; playerId: string } | null> {

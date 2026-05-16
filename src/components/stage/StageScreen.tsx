@@ -111,7 +111,12 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
             <JoinScreen event={snap.event} players={snap.players} joinUrl={joinUrl} />
           )}
           {state === 'GREETINGS_WALL' && (
-            <GreetingsWall greetings={snap.approvedGreetings} childName={snap.event.child_name} />
+            <GreetingsWall
+              greetings={snap.approvedGreetings}
+              childName={snap.event.child_name}
+              joinUrl={joinUrl}
+              eventCode={snap.event.event_code}
+            />
           )}
           {(state === 'WHEEL_IDLE' || state === 'WHEEL_SPINNING') && live && (
             <WheelStage
