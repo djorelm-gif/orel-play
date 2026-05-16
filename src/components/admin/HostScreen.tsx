@@ -93,7 +93,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
           <div className="space-y-4">
             <div className="panel-strong p-4 space-y-3">
               <div className="text-sm text-muted">מצב מסך</div>
-              <StageStateButtons eventCode={snap.event.event_code} current={live.stage_state} />
+              <StageStateButtons eventCode={snap.event.event_code} current={live.stage_state} onChanged={refresh} />
             </div>
             <div className="panel-strong p-4 space-y-3">
               <div className="text-sm text-muted">גלגל המזל</div>
@@ -141,10 +141,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
 
       {/* Right: stage preview + quick info */}
       <section className="col-span-12 lg:col-span-7 space-y-4">
-        <StagePreview
-          eventCode={snap.event.event_code}
-          liveStageKey={`${live.stage_state}:${live.active_event_game_id ?? '-'}:${live.active_question_id ?? '-'}`}
-        />
+        <StagePreview eventCode={snap.event.event_code} liveSession={live} />
 
         <BatMitzvahLinkCard event={snap.event} />
 

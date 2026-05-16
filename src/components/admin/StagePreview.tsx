@@ -1,16 +1,27 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { LiveSession } from '@/types/live-session';
 
-// Self-scaling iframe that always shows the live stage at 1920x1080 fitted into the panel.
-//
-// `liveStageKey` is a cache-buster that the host passes in (typically the current
-// stage_state + the live-session updated_at). When the host clicks to change the
-// stage, the parent re-renders with a new key and the iframe reloads — guaranteeing
-// the preview matches the live screen even if the iframe's internal polling lagged.
-export function StagePreview({ eventCode, liveStageKey }: { eventCode: string; liveStageKey?: string }) {
+// Self-scaling iframe that always shows the live stage at 1920x1080 fitted into
+// the panel. The host pushes its latest liveSession over postMessage on every
+// poll, so the embedded stage updates instantly without remounting.
+export function StagePreview({ eventCode, liveSession }: { eventCode: string; liveSession?: LiveSession | null }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [scale, setScale] = useState(0.35);
+
+  // Push every fresh liveSession into the iframe — same-origin so postMessage
+  // is essentially free and avoids the flash a key-based remount produced.
+  useEffect(() => {
+    if (!liveSession) return;
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    win.postMessage(
+      { type: 'orel:live-session', eventCode, liveSession },
+      window.location.origin,
+    );
+  }, [eventCode, liveSession]);
 
   useEffect(() => {
     function recompute() {
@@ -44,7 +55,7 @@ export function StagePreview({ eventCode, liveStageKey }: { eventCode: string; l
       </div>
       <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden bg-black border border-white/10" style={{ height }}>
         <iframe
-          key={liveStageKey ?? 'preview'}
+          ref={iframeRef}
           src={`/stage/${eventCode}`}
           title="Stage preview"
           className="origin-top-right border-0"

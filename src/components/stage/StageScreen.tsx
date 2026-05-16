@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePolledResource } from '@/lib/realtime/hooks';
 import { StageBackdrop } from '@/components/ui/StageBackdrop';
@@ -40,7 +40,32 @@ interface Props {
 
 export function StageScreen({ eventCode, joinUrl, initial }: Props) {
   const { data } = usePolledResource<Snapshot>(`/api/events/${eventCode}/snapshot`, { initialValue: initial });
-  const snap = data ?? initial;
+  // When this stage is embedded in the admin host preview, the host pushes its
+  // latest liveSession to us via postMessage on every state change so the
+  // visible card flips instantly — we don't wait for our own 2.5s poll.
+  // Heavier sub-data (player count, vote tallies) still arrives via polling.
+  const [pushedLive, setPushedLive] = useState<LiveSession | null>(null);
+  useEffect(() => {
+    function onMessage(ev: MessageEvent) {
+      if (ev.origin !== window.location.origin) return;
+      const msg = ev.data;
+      if (msg && msg.type === 'orel:live-session' && msg.eventCode === eventCode && msg.liveSession) {
+        setPushedLive(msg.liveSession as LiveSession);
+      }
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [eventCode]);
+  const polledSnap = data ?? initial;
+  // Prefer the pushed liveSession when it's newer than what we've polled.
+  const snap: Snapshot = useMemo(() => {
+    if (!pushedLive) return polledSnap;
+    const polledTime = polledSnap.liveSession?.updated_at ?? '';
+    if (pushedLive.updated_at >= polledTime) {
+      return { ...polledSnap, liveSession: pushedLive };
+    }
+    return polledSnap;
+  }, [polledSnap, pushedLive]);
   const live = snap.liveSession;
   const state: StageState = live?.stage_state ?? 'JOIN_SCREEN';
   const [confettiKey, setConfettiKey] = useState(0);
