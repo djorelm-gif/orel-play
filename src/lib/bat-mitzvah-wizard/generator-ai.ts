@@ -90,11 +90,25 @@ ${JSON.stringify(profile, null, 2)}
 }`;
 }
 
+// A complete-sounding mission/question has a verb, references *someone*, and
+// is at least a few words long. The cheap heuristics here filter out the
+// sentence fragments that occasionally show up if the model truncates.
+function looksComplete(text: string | undefined, minChars: number): boolean {
+  if (!text) return false;
+  const trimmed = text.trim();
+  if (trimmed.length < minChars) return false;
+  // Reject obviously-fragment openings — Hebrew sentence-tail markers that
+  // suggest the model dropped the start ("אז ...", "ותחגגו ...").
+  if (/^(אז |ו[ת])/.test(trimmed) && trimmed.length < 40) return false;
+  return true;
+}
+
 // Map the model's flat response into the canonical GeneratedQuestion shape.
 function expand(ai: AIResponse): GeneratedQuestion[] {
   const out: GeneratedQuestion[] = [];
 
   ai.true_or_false?.forEach((q) => {
+    if (!looksComplete(q.text, 10)) return;
     out.push({
       game_type: 'true_or_false',
       question_text: q.text,
@@ -105,6 +119,7 @@ function expand(ai: AIResponse): GeneratedQuestion[] {
   });
 
   ai.what_are_the_chances?.forEach((q) => {
+    if (!looksComplete(q.text, 14)) return;
     const score = Math.max(1, Math.min(5, q.expected_score)) || 3;
     out.push({
       game_type: 'what_are_the_chances',
@@ -116,8 +131,11 @@ function expand(ai: AIResponse): GeneratedQuestion[] {
   });
 
   ai.what_happened_next?.forEach((q) => {
+    if (!looksComplete(q.text, 14)) return;
     if (!q.options || q.options.length < 2) return;
-    const options = q.options.map((label, i) => ({ id: String(i), label }));
+    const validOptions = q.options.filter((label) => typeof label === 'string' && label.trim().length >= 3);
+    if (validOptions.length < 2) return;
+    const options = validOptions.map((label, i) => ({ id: String(i), label }));
     const correctIdx = Math.max(0, Math.min(options.length - 1, q.correct_index ?? 0));
     out.push({
       game_type: 'what_happened_next',
@@ -129,6 +147,7 @@ function expand(ai: AIResponse): GeneratedQuestion[] {
   });
 
   ai.truth_or_lie?.forEach((q) => {
+    if (!looksComplete(q.text, 14)) return;
     out.push({
       game_type: 'truth_or_lie',
       question_text: q.text,
@@ -139,6 +158,7 @@ function expand(ai: AIResponse): GeneratedQuestion[] {
   });
 
   ai.secret_missions?.forEach((q) => {
+    if (!looksComplete(q.text, 25)) return;
     out.push({
       game_type: 'secret_mission',
       question_text: q.text,
@@ -170,6 +190,10 @@ export async function generateQuestionsAI(
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         temperature: 0.9, // creative but coherent
+        // ~30-40 questions × ~40 Hebrew tokens each + JSON scaffolding. The
+        // default cap was clipping the response mid-mission, leaving
+        // sentence fragments in the final card.
+        max_tokens: 4000,
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: 'You write Hebrew Bat/Bar Mitzvah game content. Output JSON only.' },
