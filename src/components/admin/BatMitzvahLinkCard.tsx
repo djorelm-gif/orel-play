@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { OrelEvent } from '@/types/event';
 
 export function BatMitzvahLinkCard({ event }: { event: OrelEvent }) {
   const [copied, setCopied] = useState(false);
+  // Origin is browser-only; deferring to useEffect avoids a hydration mismatch
+  // (server renders an empty origin, client knows the real one).
+  const [origin, setOrigin] = useState('');
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
   if (!event.host_token) return null;
 
-  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/me/${event.host_token}`;
+  const url = `${origin}/me/${event.host_token}`;
 
   const copy = async () => {
     await navigator.clipboard.writeText(url);

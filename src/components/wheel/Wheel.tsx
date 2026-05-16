@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, useAnimation } from 'framer-motion';
+import { Logo } from '@/components/ui/Logo';
 import type { EventGame } from '@/types/game';
 
 interface WheelProps {
@@ -128,8 +129,8 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
       {/* Hub */}
       <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
         <div className="relative">
-          <div className="size-32 rounded-full bg-gold-gradient shadow-gold-glow flex items-center justify-center">
-            <span className="font-display font-black text-3xl text-black tracking-widest">OREL</span>
+          <div className="size-32 rounded-full bg-gold-gradient shadow-gold-glow flex items-center justify-center p-4">
+            <Logo size="md" className="brightness-0" />
           </div>
           <div className="absolute inset-0 rounded-full ring-4 ring-white/30" />
         </div>

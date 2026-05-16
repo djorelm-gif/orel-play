@@ -37,3 +37,26 @@ export async function persistNotificationOptIn(token: string, optIn: boolean): P
     /* ignore — non-critical */
   });
 }
+
+// Fire a system notification. Works while the tab is alive (foreground or
+// backgrounded). For truly "phone closed" delivery we'd need Web Push, which is
+// a follow-up. We dedupe with `tag` so polling won't spam the same alert.
+export function notify(
+  title: string,
+  options: { body?: string; tag?: string; icon?: string } = {},
+): void {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(title, {
+      body: options.body,
+      tag: options.tag,
+      icon: options.icon ?? '/logo.svg',
+      badge: options.icon ?? '/logo.svg',
+      // @ts-expect-error vibrate is supported on Android but not in lib.dom types
+      vibrate: [120, 60, 120],
+    });
+  } catch {
+    /* user may have revoked permission, ignore */
+  }
+}

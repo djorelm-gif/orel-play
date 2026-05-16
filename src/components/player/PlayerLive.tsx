@@ -8,6 +8,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { getAudio } from '@/lib/audio';
+import { notify } from '@/lib/notifications';
 import type { OrelEvent } from '@/types/event';
 import type { LiveSession, StageState } from '@/types/live-session';
 import type { Player } from '@/types/player';
@@ -86,14 +87,59 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
     getAudio().play(myAnswer.is_correct ? 'correct' : 'wrong');
   }, [state, myAnswer]);
 
-  // Mission cue when assigned
+  // Mission cue when assigned (sound + system notification)
   const playedMissionRef = useRef<string | null>(null);
   useEffect(() => {
     if (!myMission) return;
     if (playedMissionRef.current === myMission.id) return;
     playedMissionRef.current = myMission.id;
     getAudio().play('mission');
+    notify('🤫 משימה חשאית!', {
+      body: 'פתח/י את האפליקציה — קיבלת משימה רק בשבילך.',
+      tag: `mission:${myMission.id}`,
+    });
   }, [myMission]);
+
+  // System notifications on meaningful stage transitions. We fire only when the
+  // state *changes*, never on first mount, so refreshing in the middle of a
+  // game won't pop a stale notification.
+  const prevStateRef = useRef<StageState | null>(null);
+  useEffect(() => {
+    const prev = prevStateRef.current;
+    prevStateRef.current = state;
+    if (prev === null || prev === state) return;
+
+    if (state === 'WHEEL_SPINNING') {
+      notify('🎡 הגלגל מסתובב!', {
+        body: 'איזה משחק יוצא? פתח/י את האפליקציה.',
+        tag: `stage:${state}:${live?.updated_at ?? ''}`,
+      });
+    }
+    if (state === 'GAME_INTRO' && activeGame) {
+      notify(`🎮 ${activeGame.title}`, {
+        body: 'תכף מתחילים. פתח/י את המסך.',
+        tag: `stage:${state}:${live?.active_event_game_id ?? ''}`,
+      });
+    }
+    if (state === 'GAME_ACTIVE') {
+      notify('⚡ ענה עכשיו!', {
+        body: 'השאלה פעילה — שניות ספורות לענות.',
+        tag: `stage:${state}:${live?.active_question_id ?? ''}`,
+      });
+    }
+    if (state === 'BREAK_SCREEN') {
+      notify('☕ הפסקה קצרה', {
+        body: 'תכף ממשיכים. השאר/י את הטלפון פתוח.',
+        tag: `stage:${state}:${live?.updated_at ?? ''}`,
+      });
+    }
+    if (state === 'FINAL_SCREEN') {
+      notify('🎉 זה הסוף!', {
+        body: 'תודה שהייתם איתנו. ראה/י את הניקוד הסופי.',
+        tag: `stage:${state}`,
+      });
+    }
+  }, [state, activeGame, live?.updated_at, live?.active_event_game_id, live?.active_question_id]);
 
   async function submitAnswer({ answer_text }: { answer_text: string }) {
     if (!token) return;

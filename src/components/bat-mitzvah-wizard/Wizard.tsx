@@ -23,7 +23,12 @@ interface Props {
 
 export function Wizard({ token, childName, eventType, initialAnswers, initialIndex = 0 }: Props) {
   const isF = eventType !== 'bar_mitzvah';
-  const hasStarted = initialIndex > 0 || Object.keys(initialAnswers).length > 0;
+  // Autosave can write empty strings as the user clicks through; only a
+  // non-empty answer counts as "started" for the intro skip.
+  const hasRealAnswers = Object.values(initialAnswers).some((v) =>
+    Array.isArray(v) ? v.length > 0 : typeof v === 'string' && v.trim().length > 0,
+  );
+  const hasStarted = initialIndex > 0 || hasRealAnswers;
   const [showIntro, setShowIntro] = useState(!hasStarted);
   const [idx, setIdx] = useState(initialIndex);
   const [answers, setAnswers] = useState<WizardAnswers>(initialAnswers);
@@ -38,9 +43,15 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
   const isLast = idx >= total - 1;
   const value = answers[prompt?.id ?? ''];
 
-  // autosave every change with a small debounce
+  // autosave every change with a small debounce. Skip empty values so a user
+  // who just clicks through doesn't end up with a persisted profile that
+  // looks "started" (and would hide the intro on a later return).
   useEffect(() => {
     if (!prompt || showIntro) return;
+    const isEmpty = Array.isArray(value)
+      ? value.length === 0
+      : !value || (typeof value === 'string' && value.trim().length === 0);
+    if (isEmpty) return;
     const id = setTimeout(() => {
       void persist({ [prompt.id]: value ?? '' });
     }, 400);
