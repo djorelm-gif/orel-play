@@ -8,7 +8,7 @@ export default function HomePage() {
         <div className="space-y-3">
           <div className="chip mx-auto">
             <span className="size-2 rounded-full bg-success animate-pulse" />
-            <span>OREL PLAY · LIVE GAME SHOW</span>
+            <span>אורל פליי · שעשועון חי</span>
           </div>
           <h1 className="font-display text-7xl md:text-8xl font-black gold-shimmer">OREL PLAY</h1>
           <p className="text-muted text-xl">שעשועון אינטראקטיבי לבת מצווה</p>

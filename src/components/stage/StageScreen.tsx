@@ -15,7 +15,7 @@ import { getGameDefinition } from '@/lib/game-engine/registry';
 import { confirmWheelStop } from '@/lib/game-engine/host-actions';
 import { getAudio } from '@/lib/audio';
 import type { OrelEvent } from '@/types/event';
-import type { LiveSession, StageState } from '@/types/live-session';
+import { STAGE_STATE_LABELS, type LiveSession, type StageState } from '@/types/live-session';
 import type { Player } from '@/types/player';
 import type { Greeting } from '@/types/greeting';
 import type { EventGame, GameQuestion, PlayerAnswer, SecretMission } from '@/types/game';
@@ -147,8 +147,8 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
 
       <div className="absolute bottom-4 start-6 text-xs text-muted/60 flex items-center gap-2 z-20">
         <span className="size-1.5 rounded-full bg-success animate-pulse" />
-        OREL PLAY · {snap.event.event_code}
-        {state !== 'JOIN_SCREEN' && <span className="ms-2">· {state}</span>}
+        אורל פליי · {snap.event.event_code}
+        {state !== 'JOIN_SCREEN' && <span className="ms-2">· {STAGE_STATE_LABELS[state]}</span>}
       </div>
 
       <div className="absolute bottom-4 end-6 z-20 flex items-center gap-2">

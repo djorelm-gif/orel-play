@@ -15,7 +15,7 @@ import type { OrelEvent } from '@/types/event';
 import type { Player } from '@/types/player';
 import type { Greeting } from '@/types/greeting';
 import type { EventGame, GameQuestion, PlayerAnswer, SecretMission } from '@/types/game';
-import type { LiveSession } from '@/types/live-session';
+import { STAGE_STATE_LABELS, type LiveSession } from '@/types/live-session';
 
 interface AdminSnapshot {
   event: OrelEvent;
@@ -60,7 +60,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
         <div className="flex items-center gap-3">
           <div className="chip">
             <span className="size-2 rounded-full bg-success animate-pulse" />
-            <span>LIVE · {live.stage_state}</span>
+            <span>שידור חי · {STAGE_STATE_LABELS[live.stage_state]}</span>
           </div>
           <div className="text-sm text-muted">שחקנים: <span className="text-gold-light font-bold">{snap.players.length}</span></div>
           <a className="btn-gold py-2 px-3 text-sm" href={`/stage/${snap.event.event_code}`} target="_blank" rel="noreferrer">

@@ -19,7 +19,7 @@ export function WheelStage({ games, liveSession, childName, onSpinComplete }: Pr
         <div className="space-y-2">
           <div className="chip">
             <span className="size-2 rounded-full bg-magenta animate-pulse" />
-            <span className="tracking-[0.3em]">WHEEL OF FORTUNE</span>
+            <span className="tracking-[0.3em]">גלגל המזל</span>
           </div>
           <h1 className="stage-headline font-display gold-shimmer leading-[0.95]">
             איזה משחק

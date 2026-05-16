@@ -181,7 +181,7 @@ export function JoinForm({ event }: Props) {
       <header className="flex items-center justify-between">
         <div className="chip">
           <span className="size-2 rounded-full bg-success animate-pulse" />
-          <span className="tracking-[0.3em]">OREL · LIVE</span>
+          <span className="tracking-[0.3em]">שידור חי</span>
         </div>
         <div className="text-sm text-muted">
           קוד: <span className="text-gold font-bold tracking-widest">{event.event_code}</span>

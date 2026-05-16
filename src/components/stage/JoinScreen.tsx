@@ -20,7 +20,7 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
         <div className="space-y-2">
           <div className="chip">
             <span className="size-2 rounded-full bg-success animate-pulse" />
-            <span className="tracking-[0.3em]">LIVE · OREL PLAY</span>
+            <span className="tracking-[0.3em]">שידור חי · אורל פליי</span>
           </div>
           <h1 className="stage-headline font-display gold-shimmer">
             מצטרפים למשחק

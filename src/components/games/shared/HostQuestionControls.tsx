@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
 import { ConfirmButton } from '@/components/ui/ConfirmButton';
 import type { GameQuestion } from '@/types/game';
-import type { LiveSession } from '@/types/live-session';
+import { STAGE_STATE_LABELS, type LiveSession } from '@/types/live-session';
 
 interface Props {
   eventCode: string;
@@ -73,7 +73,7 @@ export function HostQuestionControls({ eventCode, liveSession, questions, answer
       </div>
       <div className="text-sm text-muted">
         שאלה {Math.max(0, activeIdx) + 1} מתוך {questions.length} · תשובות שהגיעו: <span className="text-gold">{answersCount}</span> · מצב:{' '}
-        <span className="text-gold">{liveSession.stage_state}</span>
+        <span className="text-gold">{STAGE_STATE_LABELS[liveSession.stage_state]}</span>
         {reveal && ' · מצב חשיפה פעיל'}
       </div>
     </div>

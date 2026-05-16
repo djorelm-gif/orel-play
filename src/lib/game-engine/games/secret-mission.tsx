@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Avatar } from '@/components/ui/Avatar';
 import { assignMission, updateMission, patchLiveSession } from '@/lib/game-engine/host-actions';
+import { STAGE_STATE_LABELS } from '@/types/live-session';
 import type { GameDefinition, StageProps, PlayerProps, HostControlsProps } from '../types';
 
 function Stage({ liveSession, players, missions }: StageProps) {
@@ -187,7 +188,7 @@ function Host({ event, eventGame, players, missions, liveSession, questions }: H
           {players.find((p) => p.id === activeMission.assigned_to_player_id)?.display_name ?? '—'}
         </div>
       )}
-      <div className="text-xs text-muted">מצב: {liveSession.stage_state}</div>
+      <div className="text-xs text-muted">מצב: {STAGE_STATE_LABELS[liveSession.stage_state]}</div>
     </div>
   );
 }
