@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar } from '@/components/ui/Avatar';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
 import type { GameDefinition, StageProps, PlayerProps, HostControlsProps } from '../types';
+import { GAME_SPECS } from '../specs';
 
 interface ChairsPayload {
   music_playing?: boolean;
@@ -263,6 +264,7 @@ export const musicalChairs: GameDefinition = {
   description: 'הגרסה הדיגיטלית למשחק הכיסאות',
   emoji: '🪑',
   defaultConfig: {},
+  aiSpec: GAME_SPECS.musical_chairs,
   stage: Stage,
   player: PlayerCmp,
   hostControls: Host,

@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { assignMission, updateMission, patchLiveSession } from '@/lib/game-engine/host-actions';
 import { STAGE_STATE_LABELS } from '@/types/live-session';
 import type { GameDefinition, StageProps, PlayerProps, HostControlsProps } from '../types';
+import { GAME_SPECS } from '../specs';
 
 function Stage({ liveSession, players, missions }: StageProps) {
   const activeMissionId = (liveSession.current_payload as { active_mission_id?: string })?.active_mission_id;
@@ -206,6 +207,7 @@ export const secretMission: GameDefinition = {
   description: 'משימה חשאית נשלחת לילד או לשולחן',
   emoji: '🤫',
   defaultConfig: { timer_seconds: 30 },
+  aiSpec: GAME_SPECS.secret_mission,
   stage: Stage,
   player: PlayerCmp,
   hostControls: Host,
