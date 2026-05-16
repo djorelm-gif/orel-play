@@ -17,7 +17,10 @@ export function usePolledResource<T>(
   lastUpdated: number | null;
   refresh: () => void;
 } {
-  const { intervalMs = 1500, initialValue = null } = options;
+  // 1.5s polling on every page was hammering Supabase free-tier limits and
+  // producing intermittent 500s. 2.5s + visibility-aware refresh keeps the UX
+  // feeling live while cutting roughly 40% of requests.
+  const { intervalMs = 2500, initialValue = null } = options;
   const [data, setData] = useState<T | null>(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -31,11 +31,17 @@ export async function POST(req: Request, ctx: { params: { code: string } }) {
 
   const moderation = await moderateWithAI(message);
 
+  // Same size guard as /join — keep inline photos small so the snapshot poll
+  // doesn't ship megabytes back to every client every 2.5 seconds.
+  const PHOTO_MAX_BYTES = 250_000;
+  const candidate = body.photo_url ?? player?.photo_url ?? null;
+  const photo_url = candidate && candidate.length <= PHOTO_MAX_BYTES ? candidate : null;
+
   const greeting = await dataSource.createGreeting({
     event_id: event.id,
     player_id: player?.id ?? null,
     display_name,
-    photo_url: body.photo_url ?? player?.photo_url ?? null,
+    photo_url,
     message: moderation.safeMessage,
     moderation_status: moderation.status === 'approved' ? 'needs_review' : moderation.status,
     // ↑ MVP policy: never auto-show. Heuristic-approved messages still go to host queue.

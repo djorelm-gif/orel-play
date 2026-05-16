@@ -19,12 +19,19 @@ export async function POST(req: Request, ctx: { params: { code: string } }) {
   }
   const gender = body.gender === 'male' || body.gender === 'female' ? body.gender : null;
 
+  // Client compressImage() should keep this under ~80KB. Anything materially
+  // bigger means an old client (pre-compression) or a malicious payload — drop
+  // the photo rather than poison the snapshot poll for everyone.
+  const PHOTO_MAX_BYTES = 250_000;
+  const photo_url =
+    body.photo_url && body.photo_url.length <= PHOTO_MAX_BYTES ? body.photo_url : undefined;
+
   const token = randomToken();
   const player = await dataSource.createPlayer({
     event_id: event.id,
     display_name,
     session_token: token,
-    photo_url: body.photo_url,
+    photo_url,
     gender,
   });
   return NextResponse.json({ player, session_token: token });
