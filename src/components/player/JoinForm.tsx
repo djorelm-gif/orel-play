@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
+import { requestNotificationPermission, persistNotificationOptIn } from '@/lib/notifications';
 import type { OrelEvent } from '@/types/event';
+import type { PlayerGender } from '@/types/player';
 
 type Step = 'name' | 'photo' | 'greeting' | 'done';
 
@@ -18,6 +20,7 @@ export function JoinForm({ event }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<Step>('name');
   const [name, setName] = useState('');
+  const [gender, setGender] = useState<PlayerGender | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [greeting, setGreeting] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +51,10 @@ export function JoinForm({ event }: Props) {
       setError('שם קצר מדי (לפחות 2 תווים)');
       return;
     }
+    if (!gender) {
+      setError('צריך לבחור זכר או נקבה');
+      return;
+    }
     setStep('photo');
   }
 
@@ -74,7 +81,11 @@ export function JoinForm({ event }: Props) {
       const res = await fetch(`/api/events/${event.event_code}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ display_name: name.trim(), photo_url: photoDataUrl ?? undefined }),
+        body: JSON.stringify({
+          display_name: name.trim(),
+          photo_url: photoDataUrl ?? undefined,
+          gender,
+        }),
       });
       const data = (await res.json()) as
         | { player: { id: string }; session_token: string }
@@ -119,12 +130,27 @@ export function JoinForm({ event }: Props) {
         return;
       }
       setStep('done');
-      setTimeout(() => router.push(`/play/${event.event_code}`), 1200);
+      // No auto-redirect — the user will tap a button on the done screen
+      // after they answer the notifications prompt.
     } catch (e) {
       setError(e instanceof Error ? e.message : 'נכשל לשלוח את הברכה');
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleNotificationChoice(optIn: boolean) {
+    if (optIn) {
+      const result = await requestNotificationPermission();
+      if (result === 'granted' && sessionToken) {
+        await persistNotificationOptIn(sessionToken, true);
+      } else if (sessionToken) {
+        await persistNotificationOptIn(sessionToken, false);
+      }
+    } else if (sessionToken) {
+      await persistNotificationOptIn(sessionToken, false);
+    }
+    router.push(`/play/${event.event_code}`);
   }
 
   async function handleGreetingNext() {
@@ -192,11 +218,40 @@ export function JoinForm({ event }: Props) {
                     autoFocus
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-xl"
+                    className="mt-1 w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-xl text-white"
                     placeholder="לדוגמה: שירה"
                     maxLength={30}
                   />
                 </label>
+                <div className="block">
+                  <span className="text-sm text-muted">מי אתה?</span>
+                  <div className="mt-1 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setGender('male')}
+                      className={`rounded-2xl py-4 font-bold border transition ${
+                        gender === 'male'
+                          ? 'bg-gold-gradient text-black border-gold shadow-gold-glow'
+                          : 'bg-white/6 border-white/12 text-white hover:bg-white/12'
+                      }`}
+                    >
+                      <div className="text-2xl">👦</div>
+                      <div>זכר</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setGender('female')}
+                      className={`rounded-2xl py-4 font-bold border transition ${
+                        gender === 'female'
+                          ? 'bg-gold-gradient text-black border-gold shadow-gold-glow'
+                          : 'bg-white/6 border-white/12 text-white hover:bg-white/12'
+                      }`}
+                    >
+                      <div className="text-2xl">👧</div>
+                      <div>נקבה</div>
+                    </button>
+                  </div>
+                </div>
                 {error && <div className="text-danger text-sm">{error}</div>}
                 <button className="btn-gold w-full text-lg py-4" onClick={submitName}>
                   המשך →
@@ -295,11 +350,30 @@ export function JoinForm({ event }: Props) {
                 key="done"
                 initial={{ opacity: 0, scale: 0.85 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="panel-strong p-8 text-center space-y-3"
+                className="panel-strong p-8 text-center space-y-5"
               >
                 <div className="text-6xl">🎉</div>
-                <div className="text-2xl font-display font-black gold-shimmer">נכנסת למשחק!</div>
-                <div className="text-muted">תכף מעבירים אותך למסך ההמתנה</div>
+                <div className="text-2xl font-display font-black gold-shimmer">הצטרפת למשחק!</div>
+                <div className="space-y-2 pt-2">
+                  <div className="text-lg font-bold">לאשר התראות?</div>
+                  <div className="text-muted text-sm text-balance">
+                    כשהמשחק יתחיל או כשתקבל/י משימה סודית — נשלח התראה לטלפון, גם אם המסך כבוי.
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <button
+                    className="btn-ghost py-3"
+                    onClick={() => handleNotificationChoice(false)}
+                  >
+                    לא תודה
+                  </button>
+                  <button
+                    className="btn-gold py-3"
+                    onClick={() => handleNotificationChoice(true)}
+                  >
+                    אישור התראות ✓
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

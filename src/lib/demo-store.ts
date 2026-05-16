@@ -312,7 +312,13 @@ export const demoStore = {
   getPlayerById(id: string): Player | null {
     return getStore().players.find((p) => p.id === id) ?? null;
   },
-  createPlayer(input: { event_id: string; display_name: string; session_token: string; photo_url?: string }): Player {
+  createPlayer(input: {
+    event_id: string;
+    display_name: string;
+    session_token: string;
+    photo_url?: string;
+    gender?: 'male' | 'female' | null;
+  }): Player {
     const p: Player = {
       id: uid('pl'),
       event_id: input.event_id,
@@ -321,6 +327,9 @@ export const demoStore = {
       team_name: null,
       session_token: input.session_token,
       is_child_star: false,
+      gender: input.gender ?? null,
+      notifications_opt_in: false,
+      push_subscription: null,
       total_score: 0,
       status: 'active',
       joined_at: new Date().toISOString(),

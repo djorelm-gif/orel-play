@@ -15,9 +15,17 @@ export function BatMitzvahLinkCard({ event }: { event: OrelEvent }) {
     setTimeout(() => setCopied(false), 1800);
   };
 
+  // The wizard wording depends on the child's gender (event_type).
+  const isFem = event.event_type === 'bat_mitzvah';
   const whatsappText = encodeURIComponent(
-    `היי ${event.child_name}! זה הקישור האישי שלך למשחק של האירוע. תכנסי לפני האירוע ותעני על השאלות הקצרות — זה ייצור משחקים מותאמים במיוחד לך 💛\n\n${url}`,
+    isFem
+      ? `היי ${event.child_name}! זה הקישור האישי שלך למשחק של האירוע. תיכנסי לפני האירוע ותעני על השאלות הקצרות — זה ייצור משחקים מותאמים במיוחד לך 💛\n\n${url}`
+      : `היי ${event.child_name}! זה הקישור האישי שלך למשחק של האירוע. תיכנס לפני האירוע ותענה על השאלות הקצרות — זה ייצור משחקים מותאמים במיוחד לך 💙\n\n${url}`,
   );
+
+  const finishedText = isFem
+    ? (event.profile_complete ? '✓ סיימה' : 'עוד לא מילאה')
+    : (event.profile_complete ? '✓ סיים' : 'עוד לא מילא');
 
   return (
     <div className="panel-strong p-4 space-y-3">
@@ -27,7 +35,7 @@ export function BatMitzvahLinkCard({ event }: { event: OrelEvent }) {
             <span className="size-2 rounded-full bg-magenta animate-pulse" />
             <span className="tracking-[0.2em]">קישור אישי ל{event.child_name}</span>
           </div>
-          <div className="text-sm text-muted">תשלחי לה לפני האירוע · {event.profile_complete ? '✓ סיימה' : 'עוד לא מילאה'}</div>
+          <div className="text-sm text-muted">לשלוח לפני האירוע · {finishedText}</div>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -45,10 +53,10 @@ export function BatMitzvahLinkCard({ event }: { event: OrelEvent }) {
           rel="noreferrer"
           className="btn-gold text-sm py-2"
         >
-          שלחי בוואטסאפ
+          שליחה בוואטסאפ
         </a>
         <a href={url} target="_blank" rel="noreferrer" className="btn-gold-outline text-sm py-2">
-          פתחי כדי לבדוק
+          פתיחה לבדיקה
         </a>
       </div>
     </div>

@@ -175,10 +175,19 @@ export const dataSource = {
     display_name: string;
     session_token: string;
     photo_url?: string;
+    gender?: 'male' | 'female' | null;
   }): Promise<Player> {
     const sb = backed();
     if (!sb) return demoStore.createPlayer(input);
     const { data, error } = await sb.from(T.players).insert(input).select().single();
+    if (error) throw new Error(error.message);
+    return data as Player;
+  },
+
+  async updatePlayer(id: string, patch: Partial<Player>): Promise<Player | null> {
+    const sb = backed();
+    if (!sb) return demoStore.updatePlayer(id, patch);
+    const { data, error } = await sb.from(T.players).update(patch).eq('id', id).select().single();
     if (error) throw new Error(error.message);
     return data as Player;
   },
