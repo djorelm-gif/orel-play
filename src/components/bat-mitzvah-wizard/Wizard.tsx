@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WIZARD_PROMPTS, type WizardPrompt, type WizardAnswers } from '@/lib/bat-mitzvah-wizard/questions';
+import {
+  WIZARD_PROMPTS,
+  type WizardPrompt,
+  type WizardAnswers,
+  loc,
+  locList,
+} from '@/lib/bat-mitzvah-wizard/questions';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { Logo } from '@/components/ui/Logo';
 import type { EventType } from '@/types/event';
@@ -16,6 +22,9 @@ interface Props {
 }
 
 export function Wizard({ token, childName, eventType, initialAnswers, initialIndex = 0 }: Props) {
+  const isF = eventType !== 'bar_mitzvah';
+  const hasStarted = initialIndex > 0 || Object.keys(initialAnswers).length > 0;
+  const [showIntro, setShowIntro] = useState(!hasStarted);
   const [idx, setIdx] = useState(initialIndex);
   const [answers, setAnswers] = useState<WizardAnswers>(initialAnswers);
   const [busy, setBusy] = useState(false);
@@ -31,7 +40,7 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
 
   // autosave every change with a small debounce
   useEffect(() => {
-    if (!prompt) return;
+    if (!prompt || showIntro) return;
     const id = setTimeout(() => {
       void persist({ [prompt.id]: value ?? '' });
     }, 400);
@@ -83,10 +92,27 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
     return (
       <>
         <ThemeApplier eventType={eventType} />
-        <DoneScreen childName={childName} />
+        <DoneScreen childName={childName} eventType={eventType} />
       </>
     );
   }
+
+  if (showIntro) {
+    return (
+      <>
+        <ThemeApplier eventType={eventType} />
+        <IntroScreen
+          childName={childName}
+          eventType={eventType}
+          total={total}
+          onStart={() => setShowIntro(false)}
+        />
+      </>
+    );
+  }
+
+  const questionText = loc(prompt.question, eventType);
+  const helperText = prompt.helper ? loc(prompt.helper, eventType) : '';
 
   return (
     <div className="min-h-screen stage-vignette p-5 flex flex-col">
@@ -96,7 +122,7 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
           <Logo size="sm" />
           <div className="chip">
             <span className="size-2 rounded-full bg-gold animate-pulse" />
-            <span className="tracking-[0.3em]">הכל עלייך</span>
+            <span className="tracking-[0.3em]">{isF ? 'הכל עלייך' : 'הכל עליך'}</span>
           </div>
         </div>
         <div className="text-sm text-muted">
@@ -119,10 +145,10 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
             className="w-full max-w-xl panel-strong p-7 space-y-5"
           >
             <div className="text-5xl">{prompt.emoji}</div>
-            <h2 className="text-3xl font-display font-black text-balance leading-snug">{prompt.question}</h2>
-            {prompt.helper && <p className="text-muted text-base">{prompt.helper}</p>}
+            <h2 className="text-3xl font-display font-black text-balance leading-snug">{questionText}</h2>
+            {helperText && <p className="text-muted text-base">{helperText}</p>}
 
-            <PromptInput prompt={prompt} value={value} onChange={handleChange} />
+            <PromptInput prompt={prompt} value={value} onChange={handleChange} eventType={eventType} />
 
             {error && <div className="text-danger text-sm">{error}</div>}
 
@@ -139,8 +165,74 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
       </div>
 
       <div className="text-center text-xs text-muted">
-        כל התשובות נשמרות באוטומטי. תוכלי לחזור לקישור הזה ולהשלים בהמשך.
+        {isF
+          ? 'כל התשובות נשמרות באוטומטי. תוכלי לחזור לקישור הזה ולהשלים בהמשך.'
+          : 'כל התשובות נשמרות באוטומטי. תוכל לחזור לקישור הזה ולהשלים בהמשך.'}
       </div>
+    </div>
+  );
+}
+
+function IntroScreen({
+  childName,
+  eventType,
+  total,
+  onStart,
+}: {
+  childName: string;
+  eventType: EventType;
+  total: number;
+  onStart: () => void;
+}) {
+  const isF = eventType !== 'bar_mitzvah';
+  return (
+    <div className="min-h-screen stage-vignette flex items-center justify-center p-5">
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.55, ease: 'backOut' }}
+        className="panel-strong p-8 md:p-10 max-w-xl w-full text-center space-y-6"
+      >
+        <div className="flex justify-center">
+          <Logo size="md" />
+        </div>
+
+        <div className="text-7xl select-none">✨</div>
+
+        <h1 className="text-4xl md:text-5xl font-display font-black gold-shimmer leading-tight">
+          היי {childName}!
+        </h1>
+
+        <p className="text-xl text-balance leading-relaxed">
+          {isF
+            ? 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'
+            : 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'}
+        </p>
+
+        <div className="space-y-3 text-muted text-base text-balance leading-relaxed">
+          <p>
+            {isF
+              ? `${total} שאלות קצרות עלייך — האוכל שאת אוהבת, החברות שלך, הרגלים מצחיקים, חלומות.`
+              : `${total} שאלות קצרות עליך — האוכל שאתה אוהב, החברים שלך, הרגלים מצחיקים, חלומות.`}
+          </p>
+          <p>
+            {isF
+              ? 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עלייך, יצחקו ויתרגשו.'
+              : 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עליך, יצחקו ויתרגשו.'}
+          </p>
+          <p className="text-sm">
+            {isF
+              ? 'אין תשובות נכונות. תהיי כנה ופשוט תהיי את. הכל נשמר אוטומטית.'
+              : 'אין תשובות נכונות. תהיה כן ופשוט תהיה אתה. הכל נשמר אוטומטית.'}
+          </p>
+        </div>
+
+        <button className="btn-gold w-full text-lg py-4" onClick={onStart}>
+          יאללה, מתחילים ✨
+        </button>
+
+        <p className="text-xs text-muted">לוקח 3-5 דקות · אפשר לעצור ולחזור</p>
+      </motion.div>
     </div>
   );
 }
@@ -149,12 +241,15 @@ function PromptInput({
   prompt,
   value,
   onChange,
+  eventType,
 }: {
   prompt: WizardPrompt;
   value: string | string[] | undefined;
   onChange: (v: string | string[]) => void;
+  eventType: EventType;
 }) {
   const strValue = useMemo(() => (Array.isArray(value) ? value.join(', ') : (value ?? '')), [value]);
+  const placeholder = prompt.placeholder ? loc(prompt.placeholder, eventType) : undefined;
 
   if (prompt.inputType === 'short_text') {
     return (
@@ -162,7 +257,7 @@ function PromptInput({
         autoFocus
         value={strValue}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={prompt.placeholder}
+        placeholder={placeholder}
         maxLength={120}
         className="w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-lg"
       />
@@ -174,7 +269,7 @@ function PromptInput({
         autoFocus
         value={strValue}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={prompt.placeholder}
+        placeholder={placeholder}
         rows={3}
         maxLength={280}
         className="w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-3 text-lg resize-none"
@@ -188,7 +283,7 @@ function PromptInput({
           autoFocus
           value={strValue}
           onChange={(e) => onChange(e.target.value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, prompt.maxItems ?? 5))}
-          placeholder={prompt.placeholder}
+          placeholder={placeholder}
           className="w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-lg"
         />
         <div className="text-xs text-muted">מפרידים בפסיק. עד {prompt.maxItems ?? 5} פריטים.</div>
@@ -197,9 +292,10 @@ function PromptInput({
   }
   if (prompt.inputType === 'choice' || prompt.inputType === 'multi_choice') {
     const selected = Array.isArray(value) ? value : value ? [value] : [];
+    const options = locList(prompt.options, eventType);
     return (
       <div className="grid gap-2">
-        {(prompt.options ?? []).map((opt) => {
+        {options.map((opt) => {
           const active = selected.includes(opt);
           return (
             <button
@@ -229,7 +325,8 @@ function PromptInput({
   return null;
 }
 
-function DoneScreen({ childName }: { childName: string }) {
+function DoneScreen({ childName, eventType }: { childName: string; eventType: EventType }) {
+  const isF = eventType !== 'bar_mitzvah';
   return (
     <div className="min-h-screen stage-vignette flex items-center justify-center p-6">
       <motion.div
@@ -244,7 +341,9 @@ function DoneScreen({ childName }: { childName: string }) {
           התשובות נשמרו. עכשיו המערכת תכין שאלות מותאמות אישית לאירוע של {childName}.
         </p>
         <p className="text-muted">המנחה רואה את כל מה שמילאת ויכול לערוך.</p>
-        <div className="text-xs text-muted pt-4">תוכלי לסגור את החלון בלב שקט.</div>
+        <div className="text-xs text-muted pt-4">
+          {isF ? 'תוכלי לסגור את החלון בלב שקט.' : 'תוכל לסגור את החלון בלב שקט.'}
+        </div>
       </motion.div>
     </div>
   );
