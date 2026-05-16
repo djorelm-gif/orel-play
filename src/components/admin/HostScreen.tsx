@@ -141,7 +141,10 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
 
       {/* Right: stage preview + quick info */}
       <section className="col-span-12 lg:col-span-7 space-y-4">
-        <StagePreview eventCode={snap.event.event_code} />
+        <StagePreview
+          eventCode={snap.event.event_code}
+          liveStageKey={`${live.stage_state}:${live.active_event_game_id ?? '-'}:${live.active_question_id ?? '-'}`}
+        />
 
         <BatMitzvahLinkCard event={snap.event} />
 

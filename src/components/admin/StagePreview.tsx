@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Self-scaling iframe that always shows the live stage at 1920x1080 fitted into the panel.
-export function StagePreview({ eventCode }: { eventCode: string }) {
+//
+// `liveStageKey` is a cache-buster that the host passes in (typically the current
+// stage_state + the live-session updated_at). When the host clicks to change the
+// stage, the parent re-renders with a new key and the iframe reloads — guaranteeing
+// the preview matches the live screen even if the iframe's internal polling lagged.
+export function StagePreview({ eventCode, liveStageKey }: { eventCode: string; liveStageKey?: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(0.35);
 
@@ -39,6 +44,7 @@ export function StagePreview({ eventCode }: { eventCode: string }) {
       </div>
       <div ref={containerRef} className="relative w-full rounded-2xl overflow-hidden bg-black border border-white/10" style={{ height }}>
         <iframe
+          key={liveStageKey ?? 'preview'}
           src={`/stage/${eventCode}`}
           title="Stage preview"
           className="origin-top-right border-0"
