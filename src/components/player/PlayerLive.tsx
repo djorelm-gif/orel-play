@@ -9,6 +9,8 @@ import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { getAudio } from '@/lib/audio';
 import { notify } from '@/lib/notifications';
+import { haptic } from '@/lib/haptics';
+import { compressImage } from '@/lib/image';
 import type { OrelEvent } from '@/types/event';
 import type { LiveSession, StageState } from '@/types/live-session';
 import type { Player } from '@/types/player';
@@ -183,7 +185,7 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
       )}
       <header className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Avatar name={me.display_name} photoUrl={me.photo_url} size="md" />
+          <PhotoButton me={me} token={token} onUpdated={(url) => setMe({ ...me, photo_url: url })} />
           <div>
             <div className="font-bold leading-tight">{me.display_name}</div>
             <div className="text-xs text-muted">ניקוד: {me.total_score}</div>
@@ -238,6 +240,90 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
           {state === 'FINAL_SCREEN' && <WaitingCard title="זה הסוף!" subtitle="תודה שהייתם איתנו ❤" tone="gold" />}
         </motion.div>
       </AnimatePresence>
+    </div>
+  );
+}
+
+// Tap-to-change avatar. The original photo can be lost (we strip oversized
+// data URLs on the server), or a player just wants to swap the photo without
+// re-joining. Compression + the 250KB cap on the server keep poll responses
+// small.
+function PhotoButton({
+  me,
+  token,
+  onUpdated,
+}: {
+  me: Player;
+  token: string | null;
+  onUpdated: (url: string) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onPick(file: File | null) {
+    if (!file || !token) return;
+    haptic('light');
+    setError(null);
+    setBusy(true);
+    try {
+      const dataUrl = await compressImage(file);
+      const res = await fetch('/api/players/me/photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: token, photo_url: dataUrl }),
+      });
+      const data = (await res.json()) as { player?: Player; error?: string };
+      if (!res.ok || !data.player) {
+        haptic('error');
+        setError(data.error ?? 'נכשל לשמור תמונה');
+        return;
+      }
+      haptic('success');
+      onUpdated(data.player.photo_url ?? dataUrl);
+    } catch {
+      haptic('error');
+      setError('נכשל לקרוא את התמונה');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const missing = !me.photo_url;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => fileRef.current?.click()}
+        disabled={busy}
+        className="relative size-12 rounded-full overflow-hidden tap-press group"
+        aria-label="החלף תמונה"
+      >
+        <Avatar name={me.display_name} photoUrl={me.photo_url} size="md" />
+        <span
+          className={`absolute inset-0 rounded-full flex items-center justify-center text-xs font-bold transition ${
+            missing
+              ? 'bg-black/60 text-gold border-2 border-gold border-dashed'
+              : 'bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100 text-white'
+          }`}
+        >
+          {busy ? '...' : missing ? '+תמונה' : 'החלף'}
+        </span>
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        className="hidden"
+        onChange={(e) => onPick(e.target.files?.[0] ?? null)}
+      />
+      {error && (
+        <div className="absolute top-full mt-1 start-0 text-xs text-danger whitespace-nowrap">
+          {error}
+        </div>
+      )}
     </div>
   );
 }
