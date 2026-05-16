@@ -68,10 +68,17 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
     const prev = prevWheelStatus.current;
     prevWheelStatus.current = live?.wheel_status;
     if (prev === live?.wheel_status) return;
-    if (live?.wheel_status === 'spinning') audio.play('wheel_spin');
+    if (live?.wheel_status === 'spinning') {
+      // 1-second drum-roll clip loops until the wheel lands
+      audio.loop('wheel_spin');
+    }
     if (live?.wheel_status === 'stopped') {
+      audio.stop('wheel_spin');
       audio.play('wheel_stop');
       setConfettiKey((k) => k + 1);
+    }
+    if (live?.wheel_status === 'idle' && prev === 'spinning') {
+      audio.stop('wheel_spin');
     }
   }, [live?.wheel_status]);
 
