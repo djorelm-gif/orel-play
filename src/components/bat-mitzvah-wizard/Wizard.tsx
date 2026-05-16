@@ -317,16 +317,12 @@ function PromptInput({
   }
   if (prompt.inputType === 'list') {
     return (
-      <div className="space-y-2">
-        <input
-          autoFocus
-          value={strValue}
-          onChange={(e) => onChange(e.target.value.split(',').map((s) => s.trim()).filter(Boolean).slice(0, prompt.maxItems ?? 5))}
-          placeholder={placeholder}
-          className="w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-lg"
-        />
-        <div className="text-xs text-muted">מפרידים בפסיק. עד {prompt.maxItems ?? 5} פריטים.</div>
-      </div>
+      <ListInput
+        prompt={prompt}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
     );
   }
   if (prompt.inputType === 'choice' || prompt.inputType === 'multi_choice') {
@@ -362,6 +358,38 @@ function PromptInput({
     );
   }
   return null;
+}
+
+// Comma-separated list input. The old version split + filtered on every
+// keystroke, so the moment the user typed "," the empty trailing token was
+// filtered out and the user couldn't type "comma + space" between items.
+// We now store the value as a raw string in parent state and rely on
+// getList() at read time to parse it — no normalization while the user types.
+function ListInput({
+  prompt,
+  value,
+  placeholder,
+  onChange,
+}: {
+  prompt: WizardPrompt;
+  value: string | string[] | undefined;
+  placeholder: string | undefined;
+  onChange: (v: string | string[]) => void;
+}) {
+  const text = Array.isArray(value) ? value.join(', ') : (value ?? '');
+  const maxItems = prompt.maxItems ?? 5;
+  return (
+    <div className="space-y-2">
+      <input
+        autoFocus
+        value={text}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-2xl bg-white/8 border border-white/15 px-4 py-4 text-lg"
+      />
+      <div className="text-xs text-muted">מפרידים בפסיק. עד {maxItems} פריטים.</div>
+    </div>
+  );
 }
 
 function DoneScreen({ childName, eventType }: { childName: string; eventType: EventType }) {
