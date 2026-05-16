@@ -10,6 +10,7 @@ import { PlayerList } from './PlayerList';
 import { BatMitzvahLinkCard } from './BatMitzvahLinkCard';
 import { ModerationQueue } from '@/components/moderation/ModerationQueue';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
+import { Logo } from '@/components/ui/Logo';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import type { OrelEvent } from '@/types/event';
 import type { Player } from '@/types/player';
@@ -48,7 +49,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
       {/* Top bar */}
       <header className="col-span-12 panel-strong p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="font-display font-black text-2xl gold-shimmer">OREL PLAY</div>
+          <Logo size="md" />
           <div className="text-sm">
             <div className="text-muted">{snap.event.name}</div>
             <div>

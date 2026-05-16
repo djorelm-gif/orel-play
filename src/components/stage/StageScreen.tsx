@@ -11,6 +11,7 @@ import { Confetti } from '@/components/ui/Confetti';
 import { MuteToggle } from '@/components/ui/MuteToggle';
 import { FullscreenButton } from '@/components/ui/FullscreenButton';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
+import { Logo } from '@/components/ui/Logo';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { confirmWheelStop } from '@/lib/game-engine/host-actions';
 import { getAudio } from '@/lib/audio';
@@ -145,9 +146,10 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
 
       <Confetti trigger={confettiKey} />
 
-      <div className="absolute bottom-4 start-6 text-xs text-muted/60 flex items-center gap-2 z-20">
+      <div className="absolute bottom-4 start-6 text-xs text-muted/60 flex items-center gap-2 z-20 opacity-70">
         <span className="size-1.5 rounded-full bg-success animate-pulse" />
-        אורל פליי · {snap.event.event_code}
+        <Logo size="sm" className="opacity-90" />
+        <span>· {snap.event.event_code}</span>
         {state !== 'JOIN_SCREEN' && <span className="ms-2">· {STAGE_STATE_LABELS[state]}</span>}
       </div>
 

@@ -1,17 +1,20 @@
 import Link from 'next/link';
 import { DEMO_EVENT_CODE } from '@/lib/env';
+import { Logo } from '@/components/ui/Logo';
 
 export default function HomePage() {
   return (
     <main className="stage-vignette min-h-screen flex items-center justify-center p-8">
       <div className="max-w-3xl w-full text-center space-y-10">
-        <div className="space-y-3">
+        <div className="space-y-5">
           <div className="chip mx-auto">
             <span className="size-2 rounded-full bg-success animate-pulse" />
-            <span>אורל פליי · שעשועון חי</span>
+            <span>שעשועון חי</span>
           </div>
-          <h1 className="font-display text-7xl md:text-8xl font-black gold-shimmer">OREL PLAY</h1>
-          <p className="text-muted text-xl">שעשועון אינטראקטיבי לבת מצווה</p>
+          <div className="flex justify-center">
+            <Logo size="xl" />
+          </div>
+          <p className="text-muted text-xl">שעשועון אינטראקטיבי לבת/בר מצווה</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4">

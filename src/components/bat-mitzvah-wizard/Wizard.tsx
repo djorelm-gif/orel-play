@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WIZARD_PROMPTS, type WizardPrompt, type WizardAnswers } from '@/lib/bat-mitzvah-wizard/questions';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
+import { Logo } from '@/components/ui/Logo';
 import type { EventType } from '@/types/event';
 
 interface Props {
@@ -90,10 +91,13 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
   return (
     <div className="min-h-screen stage-vignette p-5 flex flex-col">
       <ThemeApplier eventType={eventType} />
-      <header className="flex items-center justify-between">
-        <div className="chip">
-          <span className="size-2 rounded-full bg-gold animate-pulse" />
-          <span className="tracking-[0.3em]">הכל עלייך · OREL PLAY</span>
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Logo size="sm" />
+          <div className="chip">
+            <span className="size-2 rounded-full bg-gold animate-pulse" />
+            <span className="tracking-[0.3em]">הכל עלייך</span>
+          </div>
         </div>
         <div className="text-sm text-muted">
           שאלה {idx + 1} מתוך {total}

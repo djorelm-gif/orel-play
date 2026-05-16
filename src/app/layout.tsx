@@ -17,9 +17,9 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: 'OREL PLAY',
-  description: 'שעשועון אינטראקטיבי לבת מצווה — סורקים, נכנסים, משחקים.',
-  applicationName: 'OREL PLAY',
+  title: 'אורל פרודקשנס',
+  description: 'שעשועון אינטראקטיבי לבת/בר מצווה — סורקים, נכנסים, משחקים.',
+  applicationName: 'אורל פרודקשנס',
 };
 
 export const viewport: Viewport = {

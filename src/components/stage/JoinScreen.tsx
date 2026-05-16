@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { OrelEvent } from '@/types/event';
 import type { Player } from '@/types/player';
 import { Avatar } from '@/components/ui/Avatar';
+import { Logo } from '@/components/ui/Logo';
 
 interface JoinScreenProps {
   event: OrelEvent;
@@ -17,17 +18,20 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
   return (
     <div className="relative z-10 grid h-full grid-cols-12 gap-12 px-12 py-10">
       <div className="col-span-7 flex flex-col justify-center gap-8">
-        <div className="space-y-2">
-          <div className="chip">
-            <span className="size-2 rounded-full bg-success animate-pulse" />
-            <span className="tracking-[0.3em]">שידור חי · אורל פליי</span>
+        <div className="space-y-5">
+          <Logo size="md" className="h-12" />
+          <div className="space-y-2">
+            <div className="chip">
+              <span className="size-2 rounded-full bg-success animate-pulse" />
+              <span className="tracking-[0.3em]">שידור חי</span>
+            </div>
+            <h1 className="stage-headline font-display gold-shimmer">
+              מצטרפים למשחק
+              <br />
+              של {event.child_name}
+            </h1>
+            <p className="stage-subheadline text-muted">סרקו את הקוד והיכנסו למשחק</p>
           </div>
-          <h1 className="stage-headline font-display gold-shimmer">
-            מצטרפים למשחק
-            <br />
-            של {event.child_name}
-          </h1>
-          <p className="stage-subheadline text-muted">סרקו את הקוד והיכנסו למשחק</p>
         </div>
 
         <div className="flex items-center gap-6">
