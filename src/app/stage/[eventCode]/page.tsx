@@ -27,19 +27,21 @@ export default async function StagePage({ params }: { params: { eventCode: strin
   const joinUrl = `${env.siteUrl}/join/${event.event_code}`;
 
   return (
-    <StageScreen
-      eventCode={event.event_code}
-      joinUrl={joinUrl}
-      initial={{
-        event,
-        liveSession,
-        players,
-        approvedGreetings: greetings,
-        eventGames,
-        activeQuestion,
-        activeGameAnswers,
-        missions,
-      }}
-    />
+    <div data-theme={event.event_type} className="contents">
+      <StageScreen
+        eventCode={event.event_code}
+        joinUrl={joinUrl}
+        initial={{
+          event,
+          liveSession,
+          players,
+          approvedGreetings: greetings,
+          eventGames,
+          activeQuestion,
+          activeGameAnswers,
+          missions,
+        }}
+      />
+    </div>
   );
 }

@@ -7,5 +7,9 @@ export const dynamic = 'force-dynamic';
 export default async function JoinPage({ params }: { params: { eventCode: string } }) {
   const event = await dataSource.getEventByCode(params.eventCode);
   if (!event) return notFound();
-  return <JoinForm event={event} />;
+  return (
+    <div data-theme={event.event_type} className="contents">
+      <JoinForm event={event} />
+    </div>
+  );
 }

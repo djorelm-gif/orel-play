@@ -24,18 +24,20 @@ export default async function PlayPage({ params }: { params: { eventCode: string
   }
 
   return (
-    <PlayerLive
-      eventCode={event.event_code}
-      initial={{
-        event,
-        liveSession,
-        players,
-        approvedGreetings: greetings,
-        eventGames,
-        activeQuestion,
-        activeGameAnswers,
-        missions,
-      }}
-    />
+    <div data-theme={event.event_type} className="contents">
+      <PlayerLive
+        eventCode={event.event_code}
+        initial={{
+          event,
+          liveSession,
+          players,
+          approvedGreetings: greetings,
+          eventGames,
+          activeQuestion,
+          activeGameAnswers,
+          missions,
+        }}
+      />
+    </div>
   );
 }

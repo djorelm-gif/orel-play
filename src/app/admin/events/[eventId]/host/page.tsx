@@ -25,17 +25,21 @@ export default async function HostPage({ params }: { params: { eventId: string }
   }
 
   return (
-    <HostScreen
-      initial={{
-        event,
-        liveSession,
-        players,
-        greetings,
-        eventGames,
-        activeQuestion,
-        activeAnswers,
-        missions,
-      }}
-    />
+    // data-theme on a server-rendered wrapper means the SSR HTML already has
+    // the correct CSS variables → no purple flash on bar mitzvah events.
+    <div data-theme={event.event_type}>
+      <HostScreen
+        initial={{
+          event,
+          liveSession,
+          players,
+          greetings,
+          eventGames,
+          activeQuestion,
+          activeAnswers,
+          missions,
+        }}
+      />
+    </div>
   );
 }

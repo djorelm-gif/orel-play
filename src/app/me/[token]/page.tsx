@@ -9,11 +9,13 @@ export default async function MePage({ params }: { params: { token: string } }) 
   if (!event) return notFound();
   const profile = await dataSource.getProfile(event.id);
   return (
-    <Wizard
-      token={params.token}
-      childName={event.child_name}
-      eventType={event.event_type}
-      initialAnswers={(profile?.answers as Record<string, string | string[]>) ?? {}}
-    />
+    <div data-theme={event.event_type} className="contents">
+      <Wizard
+        token={params.token}
+        childName={event.child_name}
+        eventType={event.event_type}
+        initialAnswers={(profile?.answers as Record<string, string | string[]>) ?? {}}
+      />
+    </div>
   );
 }
