@@ -49,6 +49,31 @@ html[dir='rtl'] body {
   color: #050506;
 }
 
+/* iOS Safari overrides the input background on focus and autofill, which can
+   make our translucent-on-dark fields show as white-on-white. Force a solid
+   dark fill + white text everywhere so typed characters stay readable. */
+input,
+textarea,
+select {
+  color: #ffffff;
+  caret-color: var(--gold);
+  -webkit-text-fill-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px rgba(20, 20, 24, 0.95) inset;
+  caret-color: var(--gold);
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 @layer components {
   .text-gold-gradient {
     background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
