@@ -122,6 +122,8 @@ function Host({ event, eventGame, players, missions, liveSession, questions }: H
     ? questions.map((q) => q.question_text)
     : ['גרום/י לשולחן שלך לעמוד ולמחוא כפיים תוך 30 שניות'];
 
+  const optedIn = players.filter((p) => p.status === 'active' && p.wants_to_participate);
+
   async function send() {
     setBusy(true);
     try {
@@ -162,9 +164,14 @@ function Host({ event, eventGame, players, missions, liveSession, questions }: H
           ))}
         </select>
       </div>
+      <div className="panel p-2 text-xs text-muted">
+        {optedIn.length > 0
+          ? `${optedIn.length} שחקנים התנדבו — נגריל מהם`
+          : 'אף אחד לא לחץ "להשתתף" — נגריל מכל הפעילים'}
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <button className="btn-gold" disabled={busy} onClick={send}>
-          שלח משימה לשחקן אקראי
+          🎲 שלח לאקראי
         </button>
         <button
           className="btn-ghost"

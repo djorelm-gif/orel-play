@@ -330,6 +330,7 @@ export const demoStore = {
       gender: input.gender ?? null,
       notifications_opt_in: false,
       push_subscription: null,
+      wants_to_participate: false,
       total_score: 0,
       status: 'active',
       joined_at: new Date().toISOString(),

@@ -29,6 +29,8 @@ interface AdminSnapshot {
   missions: SecretMission[];
 }
 
+// Single-screen admin: header + 3 columns that fill the viewport. Each column
+// scrolls internally if its content overflows — the page itself never scrolls.
 export function HostScreen({ initial }: { initial: AdminSnapshot }) {
   const { data, refresh } = usePolledResource<AdminSnapshot>(
     `/api/events/${initial.event.event_code}/admin-snapshot`,
@@ -41,16 +43,26 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
     () => (activeGame ? [snap.activeQuestion].filter(Boolean) : []),
     [activeGame, snap.activeQuestion],
   );
-  const [tab, setTab] = useState<'controls' | 'moderation' | 'builder' | 'players'>('controls');
+  const pendingCount = snap.greetings.filter(
+    (g) => g.moderation_status === 'pending' || g.moderation_status === 'needs_review',
+  ).length;
+  const optedInCount = snap.players.filter((p) => p.wants_to_participate).length;
+
+  // Right-column sub-tabs. Greetings opens automatically when something needs
+  // moderating so the host doesn't miss a queue.
+  const [rightTab, setRightTab] = useState<'greetings' | 'players' | 'builder' | 'wizard'>(
+    pendingCount > 0 ? 'greetings' : 'players',
+  );
 
   return (
-    <div className="min-h-screen p-4 grid grid-cols-12 gap-4 stage-vignette">
+    <div className="h-screen overflow-hidden p-3 flex flex-col gap-3 stage-vignette">
       <ThemeApplier eventType={snap.event.event_type} />
-      {/* Top bar */}
-      <header className="col-span-12 panel-strong p-4 flex items-center justify-between">
+
+      {/* Header — slim, single row */}
+      <header className="panel-strong p-3 flex items-center justify-between gap-4 shrink-0">
         <div className="flex items-center gap-4">
           <Logo size="md" />
-          <div className="text-sm">
+          <div className="text-sm leading-tight">
             <div className="text-muted">{snap.event.name}</div>
             <div>
               קוד:{' '}
@@ -63,110 +75,126 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
             <span className="size-2 rounded-full bg-success animate-pulse" />
             <span>שידור חי · {STAGE_STATE_LABELS[live.stage_state]}</span>
           </div>
-          <div className="text-sm text-muted">שחקנים: <span className="text-gold-light font-bold">{snap.players.length}</span></div>
-          <a className="btn-gold py-2 px-3 text-sm" href={`/stage/${snap.event.event_code}`} target="_blank" rel="noreferrer">
+          <div className="text-sm text-muted">
+            שחקנים: <span className="text-gold-light font-bold">{snap.players.length}</span>
+            {optedInCount > 0 && (
+              <span className="text-gold-light"> · 🙋 {optedInCount}</span>
+            )}
+          </div>
+          <a
+            className="btn-gold py-2 px-3 text-sm"
+            href={`/stage/${snap.event.event_code}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             פתח מסך הקרנה ↗
           </a>
         </div>
       </header>
 
-      {/* Left: controls */}
-      <section className="col-span-12 lg:col-span-5 space-y-4">
-        <nav className="panel p-1 flex gap-1">
-          {(['controls', 'moderation', 'builder', 'players'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition ${
-                tab === t ? 'bg-gold-gradient text-black' : 'text-muted hover:bg-white/5'
-              }`}
-            >
-              {t === 'controls' && 'שליטה'}
-              {t === 'moderation' && `ברכות${countPending(snap.greetings)}`}
-              {t === 'builder' && 'משחקים'}
-              {t === 'players' && `שחקנים (${snap.players.length})`}
-            </button>
-          ))}
-        </nav>
+      {/* Body: 3 columns, fill remaining height, each column scrolls if needed */}
+      <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
+        {/* Left: stage controls + wheel + active game host */}
+        <section className="col-span-12 lg:col-span-4 flex flex-col gap-3 min-h-0 overflow-y-auto scrollbar-fancy pr-1">
+          <div className="panel-strong p-3 space-y-2 shrink-0">
+            <div className="text-xs text-muted">מצב מסך</div>
+            <StageStateButtons
+              eventCode={snap.event.event_code}
+              current={live.stage_state}
+              onChanged={refresh}
+            />
+          </div>
+          <div className="panel-strong p-3 space-y-2 shrink-0">
+            <div className="text-xs text-muted">גלגל המזל</div>
+            <WheelControls
+              eventCode={snap.event.event_code}
+              games={snap.eventGames}
+              liveSession={live}
+            />
+          </div>
+          {activeGame ? (
+            <div className="panel-strong p-3 space-y-2 shrink-0">
+              <div className="text-xs text-muted">
+                משחק פעיל: <span className="text-gold-light font-bold">{activeGame.title}</span>
+              </div>
+              <ActiveGameHost
+                event={snap.event}
+                eventGame={activeGame}
+                liveSession={live}
+                questions={activeGameQuestions as GameQuestion[]}
+                players={snap.players}
+                answers={snap.activeAnswers}
+                missions={snap.missions}
+                refresh={refresh}
+              />
+            </div>
+          ) : (
+            <div className="panel p-3 text-xs text-muted text-center shrink-0">
+              אין משחק פעיל. הפעל גלגל או בחר משחק ידנית למעלה.
+            </div>
+          )}
+        </section>
 
-        {tab === 'controls' && (
-          <div className="space-y-4">
-            <div className="panel-strong p-4 space-y-3">
-              <div className="text-sm text-muted">מצב מסך</div>
-              <StageStateButtons eventCode={snap.event.event_code} current={live.stage_state} onChanged={refresh} />
-            </div>
-            <div className="panel-strong p-4 space-y-3">
-              <div className="text-sm text-muted">גלגל המזל</div>
-              <WheelControls eventCode={snap.event.event_code} games={snap.eventGames} liveSession={live} />
-            </div>
-            {activeGame && (
-              <div className="panel-strong p-4 space-y-3">
-                <div className="text-sm text-muted">
-                  משחק פעיל: <span className="text-gold-light font-bold">{activeGame.title}</span>
-                </div>
-                <ActiveGameHost
-                  event={snap.event}
-                  eventGame={activeGame}
-                  liveSession={live}
-                  questions={activeGameQuestions as GameQuestion[]}
-                  players={snap.players}
-                  answers={snap.activeAnswers}
-                  missions={snap.missions}
-                  refresh={refresh}
+        {/* Middle: stage preview */}
+        <section className="col-span-12 lg:col-span-5 flex flex-col gap-3 min-h-0">
+          <StagePreview eventCode={snap.event.event_code} liveSession={live} />
+          <BatMitzvahLinkCard event={snap.event} />
+        </section>
+
+        {/* Right: greetings / players / builder / wizard tabs */}
+        <section className="col-span-12 lg:col-span-3 flex flex-col gap-3 min-h-0">
+          <nav className="panel p-1 flex gap-1 shrink-0">
+            <RightTab active={rightTab === 'greetings'} onClick={() => setRightTab('greetings')}>
+              ברכות{pendingCount > 0 ? ` (${pendingCount})` : ''}
+            </RightTab>
+            <RightTab active={rightTab === 'players'} onClick={() => setRightTab('players')}>
+              שחקנים ({snap.players.length})
+            </RightTab>
+            <RightTab active={rightTab === 'builder'} onClick={() => setRightTab('builder')}>
+              משחקים
+            </RightTab>
+          </nav>
+          <div className="panel-strong p-3 flex-1 min-h-0 overflow-y-auto scrollbar-fancy">
+            {rightTab === 'greetings' && (
+              <ModerationQueue greetings={snap.greetings} onChange={refresh} />
+            )}
+            {rightTab === 'players' && <PlayerList players={snap.players} />}
+            {rightTab === 'builder' && (
+              <div className="space-y-2">
+                <div className="text-xs text-muted">סמן/י אילו משחקים יופיעו בגלגל</div>
+                <GameBuilder
+                  eventCode={snap.event.event_code}
+                  games={snap.eventGames}
+                  onChange={refresh}
                 />
               </div>
             )}
           </div>
-        )}
-
-        {tab === 'moderation' && (
-          <div className="panel-strong p-4">
-            <ModerationQueue greetings={snap.greetings} onChange={refresh} />
-          </div>
-        )}
-
-        {tab === 'builder' && (
-          <div className="panel-strong p-4 space-y-2">
-            <div className="text-sm text-muted">סמן/י אילו משחקים יופיעו בגלגל</div>
-            <GameBuilder eventCode={snap.event.event_code} games={snap.eventGames} onChange={refresh} />
-          </div>
-        )}
-
-        {tab === 'players' && (
-          <div className="panel-strong p-4 space-y-2">
-            <PlayerList players={snap.players} />
-          </div>
-        )}
-      </section>
-
-      {/* Right: stage preview + quick info */}
-      <section className="col-span-12 lg:col-span-7 space-y-4">
-        <StagePreview eventCode={snap.event.event_code} liveSession={live} />
-
-        <BatMitzvahLinkCard event={snap.event} />
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="panel-strong p-4">
-            <div className="text-xs text-muted mb-2">לינק הצטרפות</div>
-            <div className="text-sm">
-              <code className="bg-black/50 px-2 py-1 rounded">/join/{snap.event.event_code}</code>
-            </div>
-          </div>
-          <div className="panel-strong p-4">
-            <div className="text-xs text-muted mb-2">ברכות ממתינות</div>
-            <div className="text-3xl font-display text-gold-light font-bold">
-              {snap.greetings.filter((g) => g.moderation_status === 'pending' || g.moderation_status === 'needs_review').length}
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 }
 
-function countPending(greetings: Greeting[]): string {
-  const c = greetings.filter((g) => g.moderation_status === 'pending' || g.moderation_status === 'needs_review').length;
-  return c > 0 ? ` (${c})` : '';
+function RightTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
+        active ? 'bg-gold-gradient text-black' : 'text-muted hover:bg-white/5'
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 
 function ActiveGameHost({

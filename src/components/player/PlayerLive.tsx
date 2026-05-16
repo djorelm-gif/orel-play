@@ -181,6 +181,8 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
         </div>
       </header>
 
+      <ParticipateToggle me={me} token={token} onLocalChange={(next) => setMe({ ...me, wants_to_participate: next })} />
+
       <AnimatePresence mode="wait">
         <motion.div
           key={state}
@@ -221,6 +223,65 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+function ParticipateToggle({
+  me,
+  token,
+  onLocalChange,
+}: {
+  me: Player;
+  token: string | null;
+  onLocalChange: (next: boolean) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const isF = me.gender === 'female';
+  async function toggle() {
+    if (!token || busy) return;
+    const next = !me.wants_to_participate;
+    onLocalChange(next);
+    setBusy(true);
+    try {
+      await fetch('/api/players/me/participate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_token: token, wants: next }),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+  const on = me.wants_to_participate;
+  return (
+    <button
+      onClick={toggle}
+      disabled={busy}
+      className={`mb-4 w-full rounded-2xl p-4 flex items-center gap-3 text-start transition ${
+        on
+          ? 'bg-gold-gradient text-black shadow-gold-glow'
+          : 'panel-strong text-white hover:bg-white/12'
+      }`}
+    >
+      <div className="text-3xl">{on ? '🙋' : '🪑'}</div>
+      <div className="flex-1">
+        <div className="font-bold text-lg leading-tight">
+          {on
+            ? isF
+              ? 'את בפנים למשחקים אישיים'
+              : 'אתה בפנים למשחקים אישיים'
+            : isF
+              ? 'רוצה להשתתף במשחקים אישיים?'
+              : 'רוצה להשתתף במשחקים אישיים?'}
+        </div>
+        <div className={`text-sm ${on ? 'text-black/70' : 'text-muted'}`}>
+          {on
+            ? 'יוכלו לקרוא לך לכיסאות, משימה סודית ועוד'
+            : 'כיסאות, משימה סודית, ועוד — לחץ/י כאן'}
+        </div>
+      </div>
+      <div className={`text-sm font-bold ${on ? 'text-black' : 'text-gold'}`}>{on ? 'בפנים ✓' : 'הצטרף'}</div>
+    </button>
   );
 }
 

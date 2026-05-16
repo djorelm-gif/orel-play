@@ -21,9 +21,12 @@ export async function POST(req: Request, ctx: { params: { code: string } }) {
   let targetPlayerId = body.target_player_id ?? null;
   if (!targetPlayerId) {
     const players = await dataSource.listPlayers(event.id);
-    const active = players.filter((p) => p.status === 'active');
-    if (active.length === 0) return NextResponse.json({ error: 'אין שחקנים פעילים' }, { status: 400 });
-    targetPlayerId = active[Math.floor(Math.random() * active.length)].id;
+    // Default to the opt-in pool. If nobody has volunteered yet, fall back to
+    // the full active roster so the host isn't blocked.
+    const optedIn = players.filter((p) => p.status === 'active' && p.wants_to_participate);
+    const pool = optedIn.length > 0 ? optedIn : players.filter((p) => p.status === 'active');
+    if (pool.length === 0) return NextResponse.json({ error: 'אין שחקנים פעילים' }, { status: 400 });
+    targetPlayerId = pool[Math.floor(Math.random() * pool.length)].id;
   }
 
   const mission = await dataSource.createMission({

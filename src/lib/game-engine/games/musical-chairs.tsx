@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar } from '@/components/ui/Avatar';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
@@ -137,6 +138,7 @@ function Host({ event, liveSession, players }: HostControlsProps) {
   const selected = payload.selected_player_ids ?? [];
   const eliminated = new Set(payload.eliminated_player_ids ?? []);
   const round = payload.round ?? 1;
+  const [randomN, setRandomN] = useState(4);
 
   const update = (patch: ChairsPayload) =>
     patchLiveSession(event.event_code, {
@@ -150,11 +152,45 @@ function Host({ event, liveSession, players }: HostControlsProps) {
   };
 
   const remainSelected = selected.filter((id) => !eliminated.has(id));
+  const optedIn = players.filter((p) => p.status === 'active' && p.wants_to_participate);
+
+  const pickRandom = () => {
+    // Fisher-Yates shuffle then take N. Fall back to whole roster if no one
+    // has opted in yet so the host isn't stuck.
+    const pool = optedIn.length > 0 ? optedIn : players.filter((p) => p.status === 'active');
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    const ids = shuffled.slice(0, Math.min(randomN, shuffled.length)).map((p) => p.id);
+    update({ selected_player_ids: ids, eliminated_player_ids: [], round: 1 });
+  };
 
   return (
     <div className="space-y-4">
+      <div className="panel p-3 space-y-2">
+        <div className="text-xs text-muted">
+          התנדבו למשחק: <span className="text-gold-light font-bold">{optedIn.length}</span>
+          {optedIn.length === 0 && ' · אף אחד לא לחץ "להשתתף" עדיין — נגריל מכולם'}
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted">מס׳ משתתפים</label>
+          <input
+            type="number"
+            min={2}
+            max={20}
+            value={randomN}
+            onChange={(e) => setRandomN(Math.max(2, Math.min(20, Number(e.target.value) || 2)))}
+            className="w-16 rounded-lg bg-white/8 border border-white/15 px-2 py-1 text-center"
+          />
+          <button className="btn-gold flex-1 text-sm py-2" onClick={pickRandom}>
+            🎲 הגרל {randomN} משתתפים
+          </button>
+        </div>
+      </div>
       <div className="space-y-2">
-        <div className="text-xs text-muted">בחרו משתתפים</div>
+        <div className="text-xs text-muted">או בחרו ידנית</div>
         <div className="max-h-44 overflow-auto scrollbar-fancy space-y-1">
           {players.length === 0 && <div className="text-muted text-sm">אין שחקנים מחוברים</div>}
           {players.map((p) => (
@@ -167,6 +203,7 @@ function Host({ event, liveSession, players }: HostControlsProps) {
             >
               <Avatar name={p.display_name} photoUrl={p.photo_url} size="sm" />
               <span className="flex-1 text-end">{p.display_name}</span>
+              {p.wants_to_participate && <span className="text-gold-light text-xs">🙋 רוצה</span>}
               {eliminated.has(p.id) && <span className="text-danger text-xs">הודח</span>}
             </button>
           ))}
