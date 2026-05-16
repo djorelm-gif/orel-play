@@ -152,7 +152,23 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
 
   if (!me) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted text-lg">טוען...</div>
+      <div className="min-h-screen stage-vignette p-4 pb-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="skeleton size-12 rounded-full" />
+            <div className="space-y-2">
+              <div className="skeleton h-4 w-32" />
+              <div className="skeleton h-3 w-20" />
+            </div>
+          </div>
+          <div className="space-y-2 text-end">
+            <div className="skeleton h-3 w-16 ms-auto" />
+            <div className="skeleton h-4 w-20 ms-auto" />
+          </div>
+        </div>
+        <div className="skeleton h-20 w-full mb-4 rounded-2xl" />
+        <div className="skeleton h-40 w-full rounded-3xl" />
+      </div>
     );
   }
 
@@ -186,10 +202,10 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
       <AnimatePresence mode="wait">
         <motion.div
           key={state}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -12 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0, y: 16, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.99 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 26, mass: 0.6 }}
         >
           {state === 'JOIN_SCREEN' && <WaitingCard title="נכנסת למשחק 🔥" subtitle="תישאר/י עם הטלפון פתוח — עוד רגע מתחילים" />}
           {state === 'GREETINGS_WALL' && <WaitingCard title="קוראים את הברכות" subtitle="הברכה שלך עוד תופיע במסך הגדול" />}

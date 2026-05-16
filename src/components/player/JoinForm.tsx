@@ -209,9 +209,10 @@ export function JoinForm({ event }: Props) {
             {step === 'name' && (
               <motion.div
                 key="name"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                 className="panel-strong p-6 space-y-4"
               >
                 <label className="block">
@@ -264,9 +265,10 @@ export function JoinForm({ event }: Props) {
             {step === 'photo' && (
               <motion.div
                 key="photo"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                 className="panel-strong p-6 space-y-4"
               >
                 <div className="text-center space-y-1">
@@ -314,9 +316,10 @@ export function JoinForm({ event }: Props) {
             {step === 'greeting' && (
               <motion.div
                 key="greeting"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -16, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
                 className="panel-strong p-6 space-y-4"
               >
                 <label className="block">
@@ -350,8 +353,9 @@ export function JoinForm({ event }: Props) {
             {step === 'done' && (
               <motion.div
                 key="done"
-                initial={{ opacity: 0, scale: 0.85 }}
+                initial={{ opacity: 0, scale: 0.7 }}
                 animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 20, mass: 0.7 }}
                 className="panel-strong p-8 text-center space-y-5"
               >
                 <div className="text-6xl">🎉</div>

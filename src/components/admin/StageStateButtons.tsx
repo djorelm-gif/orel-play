@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
+import { haptic } from '@/lib/haptics';
 import { STAGE_STATE_LABELS, type StageState } from '@/types/live-session';
 
 const QUICK_STATES: StageState[] = ['JOIN_SCREEN', 'GREETINGS_WALL', 'WHEEL_IDLE', 'BREAK_SCREEN', 'FINAL_SCREEN'];
@@ -22,6 +23,7 @@ export function StageStateButtons({
   const active = pending ?? current;
 
   async function pick(s: StageState) {
+    haptic('light');
     setPending(s);
     try {
       await patchLiveSession(eventCode, { stage_state: s });

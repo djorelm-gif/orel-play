@@ -38,10 +38,49 @@ body {
   background-color: var(--bg);
   color: var(--text);
   min-height: 100%;
+  /* iOS Safari overscroll bounce + the default gray tap highlight both make the
+     app feel like a website, not a native experience. Kill them. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html[dir='rtl'] body {
   font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+/* Remove the 300ms tap delay everywhere — buttons, links, anything interactive
+   should feel instant on touch. */
+button,
+a,
+[role='button'],
+input[type='checkbox'],
+input[type='radio'],
+[data-tap] {
+  touch-action: manipulation;
+}
+
+/* iOS-style "spring" ease curves available via CSS var so the same feel is
+   reused in any custom transition. */
+:root {
+  --ease-out-ios: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-ios: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Respect the user's motion preference — disable our flourishes if they've
+   asked the OS for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 ::selection {
@@ -106,17 +145,28 @@ textarea:-webkit-autofill {
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gold/60 disabled:opacity-50 disabled:pointer-events-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 disabled:opacity-50 disabled:pointer-events-none select-none;
+    transition: transform 200ms var(--ease-out-ios), box-shadow 200ms var(--ease-out-ios),
+      background-color 200ms var(--ease-out-ios), background-position 200ms var(--ease-out-ios);
+  }
+  .btn:active {
+    /* iOS "press-in" — the button gives a tiny bit so the tap feels physical. */
+    transform: scale(0.96);
+    transition-duration: 80ms;
   }
 
   .btn-gold {
     @apply btn text-black;
     background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
-    box-shadow: 0 0 30px rgba(216, 168, 78, 0.35);
+    box-shadow: 0 0 30px rgba(216, 168, 78, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
   }
   .btn-gold:hover {
-    box-shadow: 0 0 50px rgba(216, 168, 78, 0.55);
+    box-shadow: 0 0 56px rgba(216, 168, 78, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transform: translateY(-1px);
+  }
+  .btn-gold:active {
+    box-shadow: 0 0 18px rgba(216, 168, 78, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.15);
   }
 
   .btn-gold-outline {
@@ -142,9 +192,24 @@ textarea:-webkit-autofill {
     @apply btn text-white/85;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
   .btn-ghost:hover {
     background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .btn-ghost:active {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  /* iOS-style press utility for any non-button surface (e.g. a clickable card).
+     Apply to any element that should physically respond to taps. */
+  .tap-press {
+    transition: transform 200ms var(--ease-out-ios), opacity 200ms var(--ease-out-ios);
+  }
+  .tap-press:active {
+    transform: scale(0.97);
+    transition-duration: 80ms;
   }
 
   .btn-danger {
@@ -207,5 +272,44 @@ textarea:-webkit-autofill {
   }
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* iOS "frosted-glass" panel — pairs with backdrop-filter blur for that
+     premium translucent depth Apple uses everywhere. */
+  .frost {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  /* Shimmer/skeleton placeholder used while real data loads. The diagonal
+     sweep matches the gold theme rather than a generic gray. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 231, 163, 0.12) 50%,
+      transparent 70%
+    );
+    animation: shimmer-sweep 1.6s linear infinite;
+  }
+
+  @keyframes shimmer-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
   }
 }

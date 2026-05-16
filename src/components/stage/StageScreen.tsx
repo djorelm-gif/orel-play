@@ -126,10 +126,10 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
       <AnimatePresence mode="wait">
         <motion.div
           key={state}
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.02 }}
-          transition={{ duration: 0.45, ease: 'easeOut' }}
+          initial={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
+          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 1.04, filter: 'blur(6px)' }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0"
         >
           {state === 'JOIN_SCREEN' && (

@@ -11,7 +11,17 @@ import {
 } from '@/lib/bat-mitzvah-wizard/questions';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { Logo } from '@/components/ui/Logo';
+import { haptic } from '@/lib/haptics';
 import type { EventType } from '@/types/event';
+
+// RTL push/pop: forward (dir=1) slides in from the left, back from the right.
+// Declared as variants so framer-motion can type-check the direction-aware
+// transition without losing the `custom` param flow.
+const pageVariants = {
+  enter: (d: 1 | -1) => ({ opacity: 0, x: d === 1 ? -60 : 60 }),
+  center: { opacity: 1, x: 0 },
+  exit: (d: 1 | -1) => ({ opacity: 0, x: d === 1 ? 60 : -60 }),
+};
 
 interface Props {
   token: string;
@@ -31,6 +41,9 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
   const hasStarted = initialIndex > 0 || hasRealAnswers;
   const [showIntro, setShowIntro] = useState(!hasStarted);
   const [idx, setIdx] = useState(initialIndex);
+  // dir is +1 when going forward, -1 when going back, so AnimatePresence can
+  // slide pages in the natural direction (RTL means "next" comes from the left).
+  const [dir, setDir] = useState<1 | -1>(1);
   const [answers, setAnswers] = useState<WizardAnswers>(initialAnswers);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,21 +95,29 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
 
   async function next() {
     if (prompt.required && !hasValue(value)) {
+      haptic('warn');
       setError('שדה חובה. תשובה קצרה זה מספיק :)');
       return;
     }
     if (isLast) {
+      haptic('success');
       setBusy(true);
       await persist({ ...answers, [prompt.id]: value ?? '' }, true);
       setBusy(false);
       setDone(true);
       return;
     }
+    haptic('light');
+    setDir(1);
     setIdx((i) => i + 1);
   }
 
   function back() {
-    if (idx > 0) setIdx((i) => i - 1);
+    if (idx > 0) {
+      haptic('light');
+      setDir(-1);
+      setIdx((i) => i - 1);
+    }
   }
 
   if (done) {
@@ -142,17 +163,24 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
       </header>
 
       <div className="mt-4 h-1.5 rounded-full bg-white/8 overflow-hidden">
-        <div className="h-full bg-gold-gradient transition-all duration-500" style={{ width: `${progress}%` }} />
+        <motion.div
+          className="h-full bg-gold-gradient shadow-[0_0_12px_rgba(255,231,163,0.6)]"
+          initial={false}
+          animate={{ width: `${progress}%` }}
+          transition={{ type: 'spring', stiffness: 200, damping: 28 }}
+        />
       </div>
 
-      <div className="flex-1 flex items-center justify-center py-8">
-        <AnimatePresence mode="wait">
+      <div className="flex-1 flex items-center justify-center py-8 overflow-hidden">
+        <AnimatePresence mode="wait" custom={dir}>
           <motion.div
             key={prompt.id}
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -24 }}
-            transition={{ duration: 0.35 }}
+            custom={dir}
+            variants={pageVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: 'spring', stiffness: 340, damping: 30, mass: 0.7 }}
             className="w-full max-w-xl panel-strong p-7 space-y-5"
           >
             <div className="text-5xl">{prompt.emoji}</div>
