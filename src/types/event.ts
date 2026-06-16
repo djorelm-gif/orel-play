@@ -19,6 +19,9 @@ export interface OrelEvent {
   theme: EventTheme;
   host_token: string | null;
   profile_complete: boolean;
+  // When true, greetings that the AI moderator approves bypass the host's
+  // moderation queue and go straight to the wall. Default false for safety.
+  auto_approve_greetings: boolean;
   created_at: string;
   updated_at: string;
 }

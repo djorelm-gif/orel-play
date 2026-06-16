@@ -37,14 +37,23 @@ export async function POST(req: Request, ctx: { params: { code: string } }) {
   const candidate = body.photo_url ?? player?.photo_url ?? null;
   const photo_url = candidate && candidate.length <= PHOTO_MAX_BYTES ? candidate : null;
 
+  // Default policy is "needs_review" even when the AI says approved, so the
+  // host can sanity-check. When the event has auto_approve_greetings = true
+  // the AI's verdict goes straight through — useful for trusted family events
+  // where the queue would otherwise become a bottleneck.
+  let finalStatus: 'pending' | 'approved' | 'rejected' | 'needs_review' =
+    moderation.status === 'approved' ? 'needs_review' : moderation.status;
+  if (event.auto_approve_greetings && moderation.status === 'approved') {
+    finalStatus = 'approved';
+  }
+
   const greeting = await dataSource.createGreeting({
     event_id: event.id,
     player_id: player?.id ?? null,
     display_name,
     photo_url,
     message: moderation.safeMessage,
-    moderation_status: moderation.status === 'approved' ? 'needs_review' : moderation.status,
-    // ↑ MVP policy: never auto-show. Heuristic-approved messages still go to host queue.
+    moderation_status: finalStatus,
     moderation_reason: moderation.reason,
   });
 

@@ -156,7 +156,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
           </nav>
           <div className="panel-strong p-3 flex-1 min-h-0 overflow-y-auto scrollbar-fancy">
             {rightTab === 'greetings' && (
-              <ModerationQueue greetings={snap.greetings} onChange={refresh} />
+              <ModerationQueue greetings={snap.greetings} event={snap.event} onChange={refresh} />
             )}
             {rightTab === 'players' && <PlayerList players={snap.players} />}
             {rightTab === 'builder' && (

@@ -5,20 +5,50 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { approveGreeting, rejectGreeting } from '@/lib/game-engine/host-actions';
 import { Avatar } from '@/components/ui/Avatar';
 import { ConfirmButton } from '@/components/ui/ConfirmButton';
+import { haptic } from '@/lib/haptics';
 import type { Greeting } from '@/types/greeting';
+import type { OrelEvent } from '@/types/event';
 
 interface Props {
   greetings: Greeting[];
+  event?: OrelEvent;
   onChange?: () => void;
   compact?: boolean;
 }
 
-export function ModerationQueue({ greetings, onChange, compact }: Props) {
+export function ModerationQueue({ greetings, event, onChange, compact }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [autoApprove, setAutoApprove] = useState(Boolean(event?.auto_approve_greetings));
+  const [savingAuto, setSavingAuto] = useState(false);
 
   const pending = greetings.filter((g) => g.moderation_status === 'pending' || g.moderation_status === 'needs_review');
   const approved = greetings.filter((g) => g.moderation_status === 'approved');
+
+  async function toggleAutoApprove() {
+    if (!event || savingAuto) return;
+    const next = !autoApprove;
+    setAutoApprove(next);
+    setSavingAuto(true);
+    haptic('light');
+    try {
+      const res = await fetch(`/api/events/${event.event_code}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_approve_greetings: next }),
+      });
+      if (!res.ok) {
+        setAutoApprove(!next);
+        haptic('error');
+      } else {
+        onChange?.();
+      }
+    } catch {
+      setAutoApprove(!next);
+    } finally {
+      setSavingAuto(false);
+    }
+  }
 
   async function handleApprove(g: Greeting) {
     await approveGreeting(g.id, editingId === g.id ? draft : undefined);
@@ -40,6 +70,39 @@ export function ModerationQueue({ greetings, onChange, compact }: Props) {
           <span className="text-success">{approved.length}</span>
         </div>
       </div>
+
+      {event && (
+        <button
+          type="button"
+          onClick={toggleAutoApprove}
+          disabled={savingAuto}
+          className={`w-full panel p-3 flex items-center justify-between gap-3 tap-press ${
+            autoApprove ? 'border-success/40' : ''
+          }`}
+        >
+          <div className="text-end flex-1 min-w-0">
+            <div className="text-sm font-bold">
+              {autoApprove ? '✓ אישור אוטומטי פעיל' : '🛡 אישור ידני (ברירת מחדל)'}
+            </div>
+            <div className="text-xs text-muted text-balance">
+              {autoApprove
+                ? 'ברכות שעוברות בדיקת AI עולות ישר לקיר — בלי תור.'
+                : 'כל ברכה ממתינה לאישור שלך. מומלץ לאירוע גדול ופומבי.'}
+            </div>
+          </div>
+          <div
+            className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
+              autoApprove ? 'bg-success shadow-[0_0_18px_rgba(71,255,178,0.55)]' : 'bg-white/15'
+            }`}
+          >
+            <span
+              className={`absolute top-1 size-5 rounded-full bg-white shadow transition-all ${
+                autoApprove ? 'right-1' : 'right-6'
+              }`}
+            />
+          </div>
+        </button>
+      )}
       <div className={`space-y-2 ${compact ? 'max-h-72' : 'max-h-[60vh]'} overflow-auto scrollbar-fancy pr-1`}>
         <AnimatePresence initial={false}>
           {pending.length === 0 && <div className="text-muted text-sm panel p-4">אין ברכות ממתינות.</div>}

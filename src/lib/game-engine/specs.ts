@@ -112,6 +112,17 @@ const MUSICAL_CHAIRS_SPEC: GameAISpec = {
     'מי שלא נבחר — "צפה במסך הגדול". מי שנבחר — "את/ה במשחק!" עם הוראות. אם הודח — "תודה שהשתתפת". אם ניצח — מסך זהב "ניצחת!" + 500 נקודות.',
 };
 
+// Spec for any host-led physical game — no AI generation, all the rules live
+// in the .tsx component. We still keep an entry so the admin builder can show
+// the same purpose/display fields uniformly.
+const HOST_LED_SKIP: GameAISpec = {
+  purpose: 'משחק פיזי שמנוהל על ידי המנחה — אין שאלות שמיוצרות מראש.',
+  questionCount: 0,
+  instructions: 'אין צורך לייצר שאלות. דלגי על המשחק הזה ב-JSON.',
+  stageDisplay: 'כותרת גדולה, חוקי המשחק ברשימה ממוספרת, אנימציה רכה.',
+  playerDisplay: 'כרטיס פתיחה + חוקים. הצופים יכולים להתנדב לבמה.',
+};
+
 export const GAME_SPECS: Record<GameType, GameAISpec> = {
   true_or_false: TRUE_OR_FALSE_SPEC,
   what_are_the_chances: WHAT_ARE_THE_CHANCES_SPEC,
@@ -119,4 +130,9 @@ export const GAME_SPECS: Record<GameType, GameAISpec> = {
   truth_or_lie: TRUTH_OR_LIE_SPEC,
   secret_mission: SECRET_MISSION_SPEC,
   musical_chairs: MUSICAL_CHAIRS_SPEC,
+  ten_boom: HOST_LED_SKIP,
+  grandma_pregnant: HOST_LED_SKIP,
+  what_didnt_i_hear: HOST_LED_SKIP,
+  one_day: HOST_LED_SKIP,
+  obstacle_course: HOST_LED_SKIP,
 };

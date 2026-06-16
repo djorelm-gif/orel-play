@@ -41,6 +41,7 @@ function makeInitial(): Store {
     theme: { primary: '#D8A84E', accent: '#D82DFF' },
     host_token: 'demo-host-token-romi',
     profile_complete: false,
+    auto_approve_greetings: false,
     created_at: now,
     updated_at: now,
   };
@@ -267,6 +268,7 @@ export const demoStore = {
       theme: {},
       host_token: randomToken(),
       profile_complete: false,
+      auto_approve_greetings: false,
       created_at: now,
       updated_at: now,
     };
