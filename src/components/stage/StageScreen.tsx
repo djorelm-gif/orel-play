@@ -15,7 +15,7 @@ import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { Logo } from '@/components/ui/Logo';
 import { RibbonIcon } from '@/components/ui/icons/GoldIcon';
 import { getGameDefinition } from '@/lib/game-engine/registry';
-import { confirmWheelStop } from '@/lib/game-engine/host-actions';
+import { confirmWheelStop, patchLiveSession } from '@/lib/game-engine/host-actions';
 import { getAudio } from '@/lib/audio';
 import type { OrelEvent } from '@/types/event';
 import { STAGE_STATE_LABELS, type LiveSession, type StageState } from '@/types/live-session';
@@ -120,6 +120,43 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
     getAudio().play('confetti');
   }, [live?.current_payload]);
 
+  // Auto-advance: when a game ends and the event has auto_advance_after_results
+  // turned on, flip back to the wheel after an 8-sec breather. The countdown
+  // chip below reflects this same window so the host can see exactly when the
+  // wheel reappears.
+  const AUTO_ADVANCE_SECONDS = 8;
+  const autoAdvanceEnabled = state === 'GAME_RESULTS' && snap.event.auto_advance_after_results;
+  const [autoAdvanceRemaining, setAutoAdvanceRemaining] = useState<number | null>(null);
+  useEffect(() => {
+    if (!autoAdvanceEnabled) {
+      setAutoAdvanceRemaining(null);
+      return;
+    }
+    const startedAt = Date.now();
+    setAutoAdvanceRemaining(AUTO_ADVANCE_SECONDS);
+    const tick = window.setInterval(() => {
+      const left = Math.max(0, AUTO_ADVANCE_SECONDS - Math.floor((Date.now() - startedAt) / 1000));
+      setAutoAdvanceRemaining(left);
+    }, 250);
+    const fire = window.setTimeout(() => {
+      patchLiveSession(eventCode, {
+        stage_state: 'WHEEL_IDLE',
+        active_event_game_id: null,
+        active_question_id: null,
+        current_payload: {},
+        wheel_status: 'idle',
+        wheel_selected_game_id: null,
+      }).catch(() => {
+        // Host can recover manually if this fails.
+      });
+    }, AUTO_ADVANCE_SECONDS * 1000);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(fire);
+      setAutoAdvanceRemaining(null);
+    };
+  }, [autoAdvanceEnabled, eventCode]);
+
   return (
     <div className="relative h-screen w-screen overflow-hidden font-sans text-white">
       <ThemeApplier eventType={snap.event.event_type} />
@@ -186,6 +223,24 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
       </AnimatePresence>
 
       <Confetti trigger={confettiKey} />
+
+      {autoAdvanceRemaining !== null && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute top-6 end-6 z-30 rounded-full px-4 py-2 flex items-center gap-2 text-sm border border-white/15"
+          style={{
+            background: 'rgba(5,5,6,0.6)',
+            backdropFilter: 'blur(10px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(10px) saturate(160%)',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,231,163,0.18)',
+          }}
+        >
+          <span className="size-1.5 rounded-full bg-gold-light animate-pulse" />
+          <span className="text-muted">ממשיכים בעוד</span>
+          <span className="font-display font-black text-gold-light tabular-nums">{autoAdvanceRemaining}…</span>
+        </motion.div>
+      )}
 
       {(state === 'GAME_ACTIVE' || state === 'GAME_RESULTS') && (
         <MiniScoreboard players={snap.players} />

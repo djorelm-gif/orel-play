@@ -42,6 +42,7 @@ function makeInitial(): Store {
     host_token: 'demo-host-token-romi',
     profile_complete: false,
     auto_approve_greetings: false,
+    auto_advance_after_results: true,
     created_at: now,
     updated_at: now,
   };
@@ -269,6 +270,7 @@ export const demoStore = {
       host_token: randomToken(),
       profile_complete: false,
       auto_approve_greetings: false,
+      auto_advance_after_results: true,
       created_at: now,
       updated_at: now,
     };

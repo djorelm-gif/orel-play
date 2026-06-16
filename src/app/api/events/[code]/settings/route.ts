@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 // Host-only event toggles. Body is a partial OrelEvent patch; only the
 // fields below are accepted so the endpoint can't be used to mutate
 // child_name, host_token, etc.
-const ALLOWED_KEYS = ['auto_approve_greetings'] as const;
+const ALLOWED_KEYS = ['auto_approve_greetings', 'auto_advance_after_results'] as const;
 type AllowedKey = (typeof ALLOWED_KEYS)[number];
 
 export async function POST(req: Request, ctx: { params: { code: string } }) {

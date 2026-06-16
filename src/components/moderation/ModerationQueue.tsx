@@ -21,6 +21,8 @@ export function ModerationQueue({ greetings, event, onChange, compact }: Props) 
   const [draft, setDraft] = useState('');
   const [autoApprove, setAutoApprove] = useState(Boolean(event?.auto_approve_greetings));
   const [savingAuto, setSavingAuto] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(event ? event.auto_advance_after_results !== false : true);
+  const [savingAdvance, setSavingAdvance] = useState(false);
 
   const pending = greetings.filter((g) => g.moderation_status === 'pending' || g.moderation_status === 'needs_review');
   const approved = greetings.filter((g) => g.moderation_status === 'approved');
@@ -47,6 +49,31 @@ export function ModerationQueue({ greetings, event, onChange, compact }: Props) 
       setAutoApprove(!next);
     } finally {
       setSavingAuto(false);
+    }
+  }
+
+  async function toggleAutoAdvance() {
+    if (!event || savingAdvance) return;
+    const next = !autoAdvance;
+    setAutoAdvance(next);
+    setSavingAdvance(true);
+    haptic('light');
+    try {
+      const res = await fetch(`/api/events/${event.event_code}/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auto_advance_after_results: next }),
+      });
+      if (!res.ok) {
+        setAutoAdvance(!next);
+        haptic('error');
+      } else {
+        onChange?.();
+      }
+    } catch {
+      setAutoAdvance(!next);
+    } finally {
+      setSavingAdvance(false);
     }
   }
 
@@ -98,6 +125,37 @@ export function ModerationQueue({ greetings, event, onChange, compact }: Props) 
             <span
               className={`absolute top-1 size-5 rounded-full bg-white shadow transition-all ${
                 autoApprove ? 'right-1' : 'right-6'
+              }`}
+            />
+          </div>
+        </button>
+      )}
+
+      {event && (
+        <button
+          type="button"
+          onClick={toggleAutoAdvance}
+          disabled={savingAdvance}
+          className={`w-full panel p-3 flex items-center justify-between gap-3 tap-press ${
+            autoAdvance ? 'border-success/40' : ''
+          }`}
+        >
+          <div className="text-end flex-1 min-w-0">
+            <div className="text-sm font-bold">
+              {autoAdvance ? '✓ המשך אוטומטי לגלגל' : '⏸ המשך ידני בלבד'}
+            </div>
+            <div className="text-xs text-muted text-balance">
+              אחרי משחק — חוזר/ת לגלגל אוטומטית.
+            </div>
+          </div>
+          <div
+            className={`relative w-12 h-7 rounded-full transition-colors shrink-0 ${
+              autoAdvance ? 'bg-success shadow-[0_0_18px_rgba(71,255,178,0.55)]' : 'bg-white/15'
+            }`}
+          >
+            <span
+              className={`absolute top-1 size-5 rounded-full bg-white shadow transition-all ${
+                autoAdvance ? 'right-1' : 'right-6'
               }`}
             />
           </div>
