@@ -137,8 +137,24 @@ export function GreetingsWall({ greetings, childName, joinUrl, eventCode }: Prop
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
             className="relative"
           >
+            {/* Soft gold halo behind everything — the breathing studio light. */}
             <div className="absolute -inset-6 rounded-[40px] bg-gold-gradient opacity-30 blur-2xl" />
-            <div className="relative rounded-[32px] bg-white p-5 shadow-gold-glow">
+            {/* Slow-rotating dotted gold ring outside the QR — adds depth + motion
+                without competing with the bubbles. Counter-clockwise so it
+                doesn't sync with the inner content. */}
+            <div className="absolute -inset-10 rounded-full ring-rotate-slow pointer-events-none">
+              <div
+                className="absolute inset-0 rounded-full opacity-70"
+                style={{
+                  background:
+                    'conic-gradient(from 0deg, rgba(255,231,163,0.7) 0deg, transparent 60deg, transparent 180deg, rgba(216,168,78,0.55) 240deg, transparent 300deg)',
+                  WebkitMask:
+                    'radial-gradient(circle, transparent 60%, #000 61%, #000 64%, transparent 65%)',
+                  mask: 'radial-gradient(circle, transparent 60%, #000 61%, #000 64%, transparent 65%)',
+                }}
+              />
+            </div>
+            <div className="relative rounded-[32px] bg-white p-5 shadow-gold-glow overflow-hidden">
               <QRCodeSVG
                 value={joinUrl}
                 size={280}
@@ -146,6 +162,15 @@ export function GreetingsWall({ greetings, childName, joinUrl, eventCode }: Prop
                 bgColor="#FFFFFF"
                 fgColor="#050506"
                 includeMargin={false}
+              />
+              {/* Sheen sweep across the QR every 6s — like glass catching light. */}
+              <div
+                className="pointer-events-none absolute inset-0 qr-sheen-loop"
+                style={{
+                  background:
+                    'linear-gradient(105deg, transparent 35%, rgba(255,231,163,0.55) 50%, transparent 65%)',
+                }}
+                aria-hidden
               />
             </div>
             <div className="mt-3 text-center text-sm text-muted">
@@ -164,7 +189,7 @@ export function GreetingsWall({ greetings, childName, joinUrl, eventCode }: Prop
               </div>
               <Logo size="md" className="h-12" />
             </div>
-            <h1 className="stage-headline font-display gold-shimmer leading-[0.95]">
+            <h1 className="stage-headline-editorial font-editorial gold-shimmer leading-[0.95]">
               ברכות ל{childName}
             </h1>
             <p className="stage-subheadline text-muted">

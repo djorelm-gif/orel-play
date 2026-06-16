@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Heebo, Rubik } from 'next/font/google';
+import { Heebo, Rubik, Frank_Ruhl_Libre } from 'next/font/google';
 import './globals.css';
 
 const heebo = Heebo({
@@ -12,6 +12,16 @@ const heebo = Heebo({
 const rubik = Rubik({
   subsets: ['hebrew', 'latin'],
   variable: '--font-rubik',
+  display: 'swap',
+  weight: ['500', '700', '900'],
+});
+
+// Editorial Hebrew serif — used for the .font-editorial class and on the
+// large stage headlines to give an Apple-keynote / Vogue feel. Sparingly
+// loaded (only the weights we actually use) so bundle stays small.
+const frankRuhl = Frank_Ruhl_Libre({
+  subsets: ['hebrew', 'latin'],
+  variable: '--font-editorial',
   display: 'swap',
   weight: ['500', '700', '900'],
 });
@@ -31,7 +41,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${heebo.variable} ${rubik.variable}`}>
+    <html lang="he" dir="rtl" className={`${heebo.variable} ${rubik.variable} ${frankRuhl.variable}`}>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

@@ -54,7 +54,11 @@ export function OptionGrid({
             className={cn(
               'rounded-2xl px-5 py-5 text-start font-bold border w-full will-change-transform',
               'transition-[background-color,border-color,box-shadow,color] duration-200 ease-out',
-              variant === 'player' ? 'text-xl' : 'text-3xl py-7',
+              // Stage variant gets layered shadows + an inner highlight so the
+              // options feel like physical tiles, not flat web buttons.
+              variant === 'stage'
+                ? 'text-3xl py-7 font-editorial shadow-depth-2'
+                : 'text-xl',
               !reveal && !isMine && 'bg-white/6 border-white/12 hover:bg-white/12 text-white',
               isMine && !reveal && 'bg-gold-gradient text-black border-gold shadow-gold-glow',
               isCorrect && 'bg-success/25 border-success text-success shadow-[0_0_40px_rgba(71,255,178,0.35)]',

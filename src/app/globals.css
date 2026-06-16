@@ -131,17 +131,75 @@ textarea:-webkit-autofill {
   .panel {
     background: var(--panel);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
+    /* Layered shadow: ambient soft + contact dark + inner top-light line so the
+       card reads as a physical object sitting above the stage. */
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.4),
+      0 8px 24px rgba(0, 0, 0, 0.4),
+      0 24px 64px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
     border-radius: 20px;
   }
 
   .panel-strong {
     background: var(--panel-strong);
     border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(16px);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.5),
+      0 12px 36px rgba(0, 0, 0, 0.5),
+      0 32px 80px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
     border-radius: 24px;
+  }
+
+  /* Top-tier hero card: real dimensional depth with a soft golden rim halo
+     that lights only the upper edge — like studio lighting on a luxury good.
+     Use for the marquee surfaces (greetings hero, party-game rules card,
+     final-screen showcase). Layered so the ::before paints the halo INSIDE
+     the corner radius without inflating the box. */
+  .panel-3d {
+    position: relative;
+    background:
+      radial-gradient(120% 80% at 50% -20%, rgba(255, 231, 163, 0.08), transparent 55%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(255, 231, 163, 0.22);
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.55),
+      0 16px 36px rgba(0, 0, 0, 0.55),
+      0 40px 96px rgba(0, 0, 0, 0.55),
+      0 0 60px rgba(216, 168, 78, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+      inset 0 0 0 1px rgba(255, 231, 163, 0.06);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border-radius: 28px;
+  }
+  .panel-3d::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 231, 163, 0.6) 0%,
+      rgba(255, 231, 163, 0) 30%,
+      rgba(255, 231, 163, 0) 70%,
+      rgba(216, 168, 78, 0.45) 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .btn {
@@ -157,16 +215,54 @@ textarea:-webkit-autofill {
 
   .btn-gold {
     @apply btn text-black;
-    background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
-    box-shadow: 0 0 30px rgba(216, 168, 78, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    background:
+      /* Top sheen highlight line — narrow, like wet enamel catching light */
+      linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 24%),
+      linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.25),
+      0 6px 16px rgba(216, 168, 78, 0.45),
+      0 14px 32px rgba(216, 168, 78, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.65),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.18),
+      inset 0 0 0 1px rgba(255, 231, 163, 0.5);
+  }
+  /* Sheen sweep on hover — a thin diagonal highlight passes across the button
+     once, like a watch crystal catching the light. */
+  .btn-gold::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 70%
+    );
+    transform: translateX(-110%);
+    transition: transform 800ms var(--ease-out-ios);
+    pointer-events: none;
+  }
+  .btn-gold:hover::after {
+    transform: translateX(110%);
   }
   .btn-gold:hover {
-    box-shadow: 0 0 56px rgba(216, 168, 78, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 10px 28px rgba(216, 168, 78, 0.55),
+      0 22px 56px rgba(216, 168, 78, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      inset 0 0 0 1px rgba(255, 231, 163, 0.6);
     transform: translateY(-1px);
   }
   .btn-gold:active {
-    box-shadow: 0 0 18px rgba(216, 168, 78, 0.3), inset 0 1px 3px rgba(0, 0, 0, 0.15);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(216, 168, 78, 0.3),
+      inset 0 2px 4px rgba(0, 0, 0, 0.18),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.25);
   }
 
   .btn-gold-outline {
@@ -181,11 +277,28 @@ textarea:-webkit-autofill {
 
   .btn-magenta {
     @apply btn text-white;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
-    box-shadow: 0 0 35px rgb(var(--accent-rgb) / 0.45);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 30%),
+      linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 8px 24px rgb(var(--accent-rgb) / 0.45),
+      0 16px 40px rgb(var(--accent-2-rgb) / 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.2);
   }
   .btn-magenta:hover {
-    box-shadow: 0 0 60px rgb(var(--accent-rgb) / 0.6);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.35),
+      0 12px 32px rgb(var(--accent-rgb) / 0.6),
+      0 24px 56px rgb(var(--accent-2-rgb) / 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+  }
+  .btn-magenta:active {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      inset 0 2px 4px rgba(0, 0, 0, 0.25);
   }
 
   .btn-ghost {
@@ -230,20 +343,65 @@ textarea:-webkit-autofill {
       #050506;
   }
 
+  /* Refined editorial gold sheen — narrower highlight band (was 50%, now a
+     tighter sweep) with deeper gradient stops for a more "burnished" feel
+     than the previous bright-yellow shimmer. Pairs naturally with serif fonts. */
   .gold-shimmer {
     background:
       linear-gradient(
-        90deg,
+        100deg,
         rgba(255, 231, 163, 0) 0%,
-        rgba(255, 231, 163, 0.85) 50%,
+        rgba(255, 231, 163, 0) 38%,
+        rgba(255, 247, 220, 0.95) 50%,
+        rgba(255, 231, 163, 0) 62%,
         rgba(255, 231, 163, 0) 100%
+      ),
+      linear-gradient(135deg, #ffe7a3 0%, #f1c876 35%, #d8a84e 65%, #9c7732 100%);
+    background-size: 200% 100%, 100% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 5s ease-in-out infinite;
+  }
+
+  /* One-shot sheen for hero entries — runs once, then idles. The text already
+     has its gradient fill from gold-shimmer; this is just a polished pass. */
+  .gold-sweep-once {
+    background:
+      linear-gradient(
+        100deg,
+        rgba(255, 231, 163, 0) 30%,
+        rgba(255, 247, 220, 0.95) 50%,
+        rgba(255, 231, 163, 0) 70%
       ),
       linear-gradient(135deg, #ffe7a3 0%, #d8a84e 50%, #9c7732 100%);
     background-size: 200% 100%, 100% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: shimmer 3s linear infinite;
+    animation: sheen-pass 1400ms var(--ease-out-ios) 1 forwards;
+  }
+  @keyframes sheen-pass {
+    from {
+      background-position: -100% 0, 0 0;
+    }
+    to {
+      background-position: 100% 0, 0 0;
+    }
+  }
+
+  /* Gold filigree icon — paints any inline SVG with the gold gradient + drop
+     shadow so a flat path reads as a tiny luxury emblem. */
+  .icon-gold {
+    color: #d8a84e;
+    background: linear-gradient(135deg, #ffe7a3 0%, #d8a84e 55%, #9c7732 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 8px rgba(216, 168, 78, 0.35));
+  }
+  /* For SVGs with their own gradient defined, we just need the drop-shadow. */
+  .icon-gold-glow {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 10px rgba(216, 168, 78, 0.4));
   }
 
   .scrollbar-fancy::-webkit-scrollbar {
@@ -265,6 +423,25 @@ textarea:-webkit-autofill {
     line-height: 1;
     letter-spacing: -0.02em;
     font-weight: 900;
+    /* Subtle text-shadow so big gold text doesn't look flat on dark backgrounds.
+       Layered like a real Apple-keynote callout. */
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.4),
+      0 8px 24px rgba(0, 0, 0, 0.45),
+      0 0 32px rgba(216, 168, 78, 0.15);
+  }
+  /* Editorial variant — uses the serif font and tighter tracking for the
+     Vogue/Cartier feel. Used in marquee surfaces only (greetings hero,
+     final screen, optional party-game title). */
+  .stage-headline-editorial {
+    font-size: clamp(48px, 8vw, 140px);
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    text-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.4),
+      0 12px 32px rgba(0, 0, 0, 0.5),
+      0 0 40px rgba(216, 168, 78, 0.18);
   }
   .stage-subheadline {
     font-size: clamp(20px, 2.2vw, 36px);
@@ -272,6 +449,72 @@ textarea:-webkit-autofill {
   }
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Slow breathing halo behind the stage — subtle radial that fades in/out
+     like a stage spot warming up. GPU-only (opacity/transform). */
+  .halo-breathe {
+    animation: halo-breathe 9s ease-in-out infinite;
+  }
+  @keyframes halo-breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.06);
+    }
+  }
+
+  /* Slow drift for the gold-dust particle layer in StageBackdrop. Pure
+     transform — no layout thrash. */
+  .gold-dust-drift {
+    animation: gold-dust-drift 36s linear infinite;
+  }
+  @keyframes gold-dust-drift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-160px, -120px, 0);
+    }
+  }
+
+  /* Outer ring slowly rotating around the QR/wheel — counter-clockwise so it
+     doesn't compete with the spinning wheel itself. */
+  .ring-rotate-slow {
+    animation: ring-rotate 28s linear infinite;
+  }
+  @keyframes ring-rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* QR sheen sweep — runs every 6s, just a brief crystal-catch-light flicker. */
+  .qr-sheen-loop {
+    animation: qr-sheen 6s ease-in-out infinite;
+  }
+  @keyframes qr-sheen {
+    0%,
+    85%,
+    100% {
+      transform: translateX(-110%) skewX(-12deg);
+      opacity: 0;
+    }
+    90%,
+    95% {
+      opacity: 1;
+    }
+    97% {
+      transform: translateX(110%) skewX(-12deg);
+      opacity: 0;
+    }
   }
 
   /* iOS "frosted-glass" panel — pairs with backdrop-filter blur for that

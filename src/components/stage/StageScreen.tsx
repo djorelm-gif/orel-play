@@ -13,6 +13,7 @@ import { MuteToggle } from '@/components/ui/MuteToggle';
 import { FullscreenButton } from '@/components/ui/FullscreenButton';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { Logo } from '@/components/ui/Logo';
+import { RibbonIcon } from '@/components/ui/icons/GoldIcon';
 import { getGameDefinition } from '@/lib/game-engine/registry';
 import { confirmWheelStop } from '@/lib/game-engine/host-actions';
 import { getAudio } from '@/lib/audio';
@@ -122,15 +123,25 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
   return (
     <div className="relative h-screen w-screen overflow-hidden font-sans text-white">
       <ThemeApplier eventType={snap.event.event_type} />
-      <StageBackdrop />
+      {/* Backdrop gets its own gentle re-entry on state change so the bg
+          appears to slide slower than the content — that's the parallax. */}
+      <motion.div
+        key={`bg-${state}`}
+        initial={{ opacity: 0.6, scale: 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0"
+      >
+        <StageBackdrop />
+      </motion.div>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={state}
-          initial={{ opacity: 0, scale: 0.96, filter: 'blur(8px)' }}
-          animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, scale: 1.04, filter: 'blur(6px)' }}
-          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          initial={{ opacity: 0, scale: 0.96, y: 14, filter: 'blur(10px)' }}
+          animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+          exit={{ opacity: 0, scale: 1.04, y: -8, filter: 'blur(6px)' }}
+          transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0"
         >
           {state === 'JOIN_SCREEN' && (
@@ -157,10 +168,15 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
           )}
           {state === 'BREAK_SCREEN' && (
             <div className="relative z-10 flex h-full items-center justify-center text-center">
-              <div className="space-y-4">
-                <h1 className="stage-headline font-display gold-shimmer">הפסקה קצרה</h1>
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+                className="space-y-5"
+              >
+                <h1 className="stage-headline-editorial font-editorial gold-shimmer">הפסקה קצרה</h1>
                 <p className="stage-subheadline text-muted">תכף ממשיכים — הישארו איתנו</p>
-              </div>
+              </motion.div>
             </div>
           )}
           {state === 'FINAL_SCREEN' && (
@@ -193,24 +209,54 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
 function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }) {
   return (
     <div className="relative z-10 h-full overflow-y-auto scrollbar-fancy">
-      <div className="min-h-full flex flex-col items-center justify-start gap-10 px-12 py-16">
-        <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-          className="text-center space-y-4"
-        >
-          <h1
-            className="font-display font-black gold-shimmer leading-none"
-            style={{ fontSize: 'clamp(72px, 11vw, 180px)' }}
+      <div className="min-h-full flex flex-col items-center justify-start gap-12 px-12 py-16">
+        {/* Editorial hero — gold ribbon-style emblem above, the kid's name in
+            a serif display, then a refined "תודה" line. Staggered so the
+            elements arrive one after the other like a keynote opening. */}
+        <div className="text-center space-y-6 max-w-5xl">
+          <motion.div
+            initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
+            className="flex justify-center"
           >
-            {event.child_name}
-          </h1>
-          <div className="stage-headline font-display gold-shimmer">תודה!</div>
-          <p className="stage-subheadline text-muted">{event.name}</p>
-        </motion.div>
+            <RibbonIcon size={88} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.7, y: 20, filter: 'blur(20px)' }}
+            animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ type: 'spring', stiffness: 180, damping: 22, delay: 0.18 }}
+          >
+            <h1
+              className="font-editorial font-black gold-shimmer leading-none"
+              style={{ fontSize: 'clamp(80px, 13vw, 220px)', letterSpacing: '-0.03em' }}
+            >
+              {event.child_name}
+            </h1>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.42 }}
+            className="space-y-3"
+          >
+            {/* Thin gold separator — keynote-style hairline above the secondary line. */}
+            <div className="mx-auto h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent opacity-80" />
+            <div className="stage-headline-editorial font-editorial text-gold-light/90">
+              תודה
+            </div>
+            <p className="stage-subheadline text-muted">{event.name}</p>
+          </motion.div>
+        </div>
 
-        <Leaderboard players={players} eventType={event.event_type} />
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
+          className="w-full"
+        >
+          <Leaderboard players={players} eventType={event.event_type} />
+        </motion.div>
       </div>
     </div>
   );

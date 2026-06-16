@@ -82,6 +82,21 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
         }}
       />
 
+      {/* Oval ground shadow — soft horizontal ellipse below the wheel that
+          sells the idea of a heavy disc sitting on a stage floor. Pure CSS. */}
+      <div
+        aria-hidden
+        className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+        style={{
+          width: size * 0.9,
+          height: size * 0.18,
+          bottom: -size * 0.08,
+          background:
+            'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 35%, transparent 70%)',
+          filter: 'blur(14px)',
+        }}
+      />
+
       {/* Pointer */}
       <div className="absolute left-1/2 -top-3 z-20 -translate-x-1/2">
         <div
@@ -91,11 +106,33 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
         <div className="absolute left-1/2 top-9 -translate-x-1/2 size-4 rounded-full bg-gold shadow-gold-glow" />
       </div>
 
+      {/* Rim — a darker outer ring + lighter inner band sit between the disc
+          and the glow, giving the wheel a real bezel like a luxury timepiece. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 rounded-full pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle, transparent 64%, rgba(0,0,0,0.5) 66%, rgba(0,0,0,0.55) 70%, rgba(216,168,78,0.3) 73%, rgba(255,231,163,0.45) 76%, transparent 78%)',
+          boxShadow:
+            'inset 0 -10px 24px rgba(0,0,0,0.5), inset 0 12px 24px rgba(255,231,163,0.15)',
+        }}
+      />
+
       {/* Wheel disc */}
       <motion.div
         animate={controls}
-        className="absolute inset-0 rounded-full border-[8px] border-gold/80 shadow-[0_0_60px_rgba(216,168,78,0.5),inset_0_0_40px_rgba(0,0,0,0.6)] overflow-hidden"
-        style={{ background: conic, willChange: 'transform' }}
+        className="absolute inset-0 rounded-full overflow-hidden"
+        style={{
+          background: conic,
+          willChange: 'transform',
+          border: '8px solid #d8a84e',
+          // Layered shadows: outer halo + inner darken (vignette toward edges) +
+          // top inner highlight to imply ambient overhead light + bottom dark
+          // to imply contact shadow under the disc.
+          boxShadow:
+            '0 0 60px rgba(216,168,78,0.5), 0 24px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.6), inset 0 12px 32px rgba(255,231,163,0.18), inset 0 -16px 40px rgba(0,0,0,0.45)',
+        }}
       >
         {segments.map((g, i) => {
           const center = i * segAngle + segAngle / 2;
@@ -126,10 +163,19 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
         ))}
       </motion.div>
 
-      {/* Hub */}
+      {/* Hub — looks like a polished gold cabochon. Highlight at the top,
+          deeper shadow at the bottom, inset ring on the bezel. */}
       <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
         <div className="relative">
-          <div className="size-32 rounded-full bg-gold-gradient shadow-gold-glow flex items-center justify-center p-4">
+          <div
+            className="size-32 rounded-full flex items-center justify-center p-4"
+            style={{
+              background:
+                'radial-gradient(circle at 35% 25%, #fff7dc 0%, #ffe7a3 18%, #d8a84e 55%, #9c7732 100%)',
+              boxShadow:
+                '0 0 0 1px rgba(255,231,163,0.6), 0 8px 24px rgba(0,0,0,0.6), 0 16px 48px rgba(216,168,78,0.45), inset 0 2px 4px rgba(255,255,255,0.85), inset 0 -8px 16px rgba(120,75,20,0.6)',
+            }}
+          >
             <Logo size="md" className="brightness-0" />
           </div>
           <div className="absolute inset-0 rounded-full ring-4 ring-white/30" />

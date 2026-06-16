@@ -26,12 +26,26 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-heebo)', 'system-ui', 'sans-serif'],
         display: ['var(--font-rubik)', 'var(--font-heebo)', 'sans-serif'],
+        // Editorial serif for hero headlines + final-screen marquee.
+        // Falls back gracefully to the display sans so nothing breaks if the
+        // Google font hasn't loaded yet.
+        editorial: ['var(--font-editorial)', 'var(--font-rubik)', 'serif'],
       },
       boxShadow: {
         'gold-glow': '0 0 40px rgba(216, 168, 78, 0.45), 0 0 80px rgba(216, 168, 78, 0.18)',
         'magenta-glow':
           '0 0 40px rgb(var(--accent-rgb) / 0.45), 0 0 100px rgb(var(--accent-2-rgb) / 0.25)',
         'panel': '0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Premium dimensional shadows — layered for real depth perception.
+        // Pattern: ambient (large soft) + contact (small dark) + rim (top highlight).
+        'depth-1':
+          '0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07)',
+        'depth-2':
+          '0 2px 4px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.45), 0 16px 48px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.10)',
+        'depth-3':
+          '0 4px 8px rgba(0,0,0,0.5), 0 16px 32px rgba(0,0,0,0.55), 0 32px 64px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12)',
+        'gold-rim':
+          '0 0 0 1px rgba(255,231,163,0.35), 0 0 30px rgba(216,168,78,0.35), inset 0 1px 0 rgba(255,255,255,0.25)',
       },
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #FFE7A3 0%, #D8A84E 45%, #9C7732 100%)',

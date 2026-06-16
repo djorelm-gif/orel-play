@@ -25,7 +25,7 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
               <span className="size-2 rounded-full bg-success animate-pulse" />
               <span className="tracking-[0.3em]">שידור חי</span>
             </div>
-            <h1 className="stage-headline font-display gold-shimmer">
+            <h1 className="stage-headline-editorial font-editorial gold-shimmer">
               מצטרפים למשחק
               <br />
               של {event.child_name}
@@ -76,8 +76,21 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="relative"
         >
+          {/* Halo + rotating gold arc — same luxury treatment as the greetings hero. */}
           <div className="absolute -inset-6 rounded-[40px] bg-gold-gradient opacity-30 blur-2xl" />
-          <div className="relative rounded-[36px] bg-white p-6 shadow-gold-glow">
+          <div className="absolute -inset-14 rounded-full ring-rotate-slow pointer-events-none">
+            <div
+              className="absolute inset-0 rounded-full opacity-70"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, rgba(255,231,163,0.7) 0deg, transparent 60deg, transparent 180deg, rgba(216,168,78,0.55) 240deg, transparent 300deg)',
+                WebkitMask:
+                  'radial-gradient(circle, transparent 60%, #000 61%, #000 64%, transparent 65%)',
+                mask: 'radial-gradient(circle, transparent 60%, #000 61%, #000 64%, transparent 65%)',
+              }}
+            />
+          </div>
+          <div className="relative rounded-[36px] bg-white p-6 shadow-gold-glow overflow-hidden">
             <QRCodeSVG
               value={joinUrl}
               size={420}
@@ -85,6 +98,14 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
               bgColor="#FFFFFF"
               fgColor="#050506"
               includeMargin={false}
+            />
+            <div
+              className="pointer-events-none absolute inset-0 qr-sheen-loop"
+              style={{
+                background:
+                  'linear-gradient(105deg, transparent 35%, rgba(255,231,163,0.55) 50%, transparent 65%)',
+              }}
+              aria-hidden
             />
           </div>
           <div className="mt-4 text-center text-sm text-muted">

@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
 import { haptic } from '@/lib/haptics';
+import { CrownIcon } from '@/components/ui/icons/GoldIcon';
 import type { EventType } from '@/types/event';
 import type { StageProps, PlayerProps, HostControlsProps } from '../types';
 
@@ -50,15 +51,24 @@ export function makePartyStage(cfg: PartyConfig) {
             transition={{ type: 'spring', stiffness: 240, damping: 18 }}
             className="text-center space-y-8"
           >
-            <div className="text-8xl leading-none" aria-hidden>
-              👑
-            </div>
-            <div className="font-display font-black text-gold-light tracking-wide" style={{ fontSize: 'clamp(40px, 5vw, 80px)' }}>
+            <motion.div
+              initial={{ scale: 0, rotate: -12 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 230, damping: 16, delay: 0.18 }}
+              className="flex justify-center"
+            >
+              <CrownIcon size={120} />
+            </motion.div>
+            <div
+              className="font-editorial font-black text-gold-light tracking-wide"
+              style={{ fontSize: 'clamp(40px, 5vw, 80px)' }}
+            >
               {winnerLabel(event.event_type)}
             </div>
+            <div className="mx-auto h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent opacity-90" />
             <div
-              className="font-display font-black gold-shimmer leading-none"
-              style={{ fontSize: 'clamp(80px, 12vw, 200px)' }}
+              className="font-editorial font-black gold-shimmer leading-none"
+              style={{ fontSize: 'clamp(80px, 12vw, 200px)', letterSpacing: '-0.02em' }}
             >
               {winnerName}
             </div>
@@ -77,31 +87,44 @@ export function makePartyStage(cfg: PartyConfig) {
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
             className="space-y-4"
           >
-            <div className="text-7xl">{cfg.emoji}</div>
+            <div className="text-7xl drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]">{cfg.emoji}</div>
             <div className="chip">
               <span className="size-2 rounded-full bg-magenta animate-pulse" />
               <span className="tracking-[0.3em]">{intro ? 'המשחק שנבחר' : reveal ? 'סיום סיבוב' : 'משחק חי'}</span>
             </div>
-            <h1 className="stage-headline font-display gold-shimmer leading-[0.95]">{cfg.title}</h1>
+            <h1 className="stage-headline-editorial font-editorial gold-shimmer leading-[0.95]">
+              {cfg.title}
+            </h1>
+            {/* Hairline gold separator between title and tagline — keynote feel. */}
+            <div className="h-px w-28 bg-gradient-to-l from-transparent via-gold to-transparent opacity-90 me-auto" />
             <p className="stage-subheadline text-muted">{cfg.tagline}</p>
           </motion.div>
         </div>
 
+        {/* Rules card — luxury panel-3d with minted-coin gold numbered badges. */}
         <div className="col-span-5 flex flex-col justify-center gap-3">
-          <div className="text-xs text-muted tracking-[0.2em]">חוקי המשחק</div>
-          <div className="panel-strong p-5 space-y-3">
+          <div className="text-xs text-muted tracking-[0.3em]">חוקי המשחק</div>
+          <div className="panel-3d p-6 space-y-4">
             {cfg.rules.map((rule, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.15 + i * 0.08, type: 'spring', stiffness: 280, damping: 26 }}
-                className="flex gap-3 items-start"
+                transition={{ delay: 0.18 + i * 0.09, type: 'spring', stiffness: 280, damping: 26 }}
+                className="flex gap-4 items-start"
               >
-                <div className="size-8 rounded-full bg-gold-gradient text-black font-display font-black grid place-items-center text-lg shrink-0">
+                <div
+                  className="size-10 rounded-full text-black font-editorial font-black grid place-items-center text-xl shrink-0"
+                  style={{
+                    background:
+                      'radial-gradient(circle at 35% 25%, #fff7dc 0%, #ffe7a3 25%, #d8a84e 65%, #9c7732 100%)',
+                    boxShadow:
+                      '0 0 0 1px rgba(255,231,163,0.6), 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.85), inset 0 -3px 6px rgba(120,75,20,0.55)',
+                  }}
+                >
                   {i + 1}
                 </div>
-                <div className="text-2xl leading-snug pt-0.5">{rule}</div>
+                <div className="text-2xl leading-snug pt-1">{rule}</div>
               </motion.div>
             ))}
           </div>
