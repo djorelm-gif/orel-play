@@ -13,8 +13,9 @@ interface WheelProps {
   size?: number;
 }
 
-// Premium wheel: rounded glass disc, color-rotating segments, gold pointer + halo.
-// Spin animates from current rotation → target landing on the selected segment, with overshoot.
+// Premium game-show wheel with 3D perspective, layered lighting, radial labels
+// that run from rim to hub (like a real TV-show wheel), and a long ease-out
+// spin that finishes with a tiny bounce on landing.
 export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size = 720 }: WheelProps) {
   const controls = useAnimation();
   const rotationRef = useRef(0);
@@ -28,15 +29,17 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
   const segCount = Math.max(segments.length, 1);
   const segAngle = 360 / segCount;
 
-  // Build a single conic gradient with alternating accent shades, themed via CSS vars
+  // Conic gradient — alternating accent shades themed via CSS vars so the
+  // wheel adapts to bat/bar mitzvah colorways automatically.
   const conic = useMemo(() => {
-    // Mix dark backdrop with current accent at varying intensities so it adapts to bat/bar
     const stops: string[] = [];
     for (let i = 0; i < segCount; i++) {
       const from = i * segAngle;
       const to = (i + 1) * segAngle;
-      // Alternate two depths of the active accent
-      const layer = i % 2 === 0 ? 'rgb(var(--accent-2-rgb) / 0.55)' : 'rgb(var(--accent-rgb) / 0.45)';
+      const layer =
+        i % 2 === 0
+          ? 'rgb(var(--accent-2-rgb) / 0.62)'
+          : 'rgb(var(--accent-rgb) / 0.5)';
       stops.push(`${layer} ${from}deg ${to}deg`);
     }
     return `conic-gradient(from -90deg, ${stops.join(', ')}), #1a0f2b`;
@@ -45,7 +48,7 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
   useEffect(() => {
     if (!isSpinning) return;
     if (!selectedGameId) {
-      // Spin freely until selection arrives
+      // Idle pre-selection spin: build anticipation while server picks.
       controls.start({
         rotate: rotationRef.current + 360 * 6,
         transition: { duration: 3.5, ease: [0.16, 1, 0.3, 1] },
@@ -55,130 +58,232 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
     const idx = segments.findIndex((g) => g.id === selectedGameId);
     if (idx < 0) return;
     const segCenter = idx * segAngle + segAngle / 2;
-    // Pointer is at top (-90deg from segment 0 start). We want segCenter to land at pointer = 0deg up.
-    // Final rotation: many full turns + offset so the segCenter lines up with pointer.
-    const turns = 6;
+    const turns = 7;
     const finalAngle = turns * 360 + (360 - segCenter);
     const target = rotationRef.current + finalAngle - (rotationRef.current % 360);
 
     rotationRef.current = target;
+
+    // Two-stage stop: a long slowdown into the landing, then a tiny overshoot
+    // + settle so it feels like a real heavy wheel ratcheting onto the peg.
     controls
       .start({
-        rotate: target,
-        transition: { duration: 5.5, ease: [0.16, 1, 0.3, 1] },
+        rotate: [rotationRef.current, target + 4, target - 1.5, target],
+        transition: {
+          duration: 6.2,
+          times: [0, 0.85, 0.94, 1],
+          ease: [0.18, 0.92, 0.28, 1],
+        },
       })
       .then(() => onSpinComplete?.());
     force((x) => x + 1);
   }, [isSpinning, selectedGameId, segments, segAngle, controls, onSpinComplete]);
 
+  // Radial label: the text container is anchored at the wheel centre, then
+  // rotated so its long axis points outward along the segment. Hebrew RTL
+  // means the first letter naturally sits at the rim end — exactly the
+  // direction the audience reads on a real game-show wheel.
+  const labelLength = size * 0.30; // distance text covers along the radius
+  const labelOffset = size * 0.16; // gap between hub and start of text
+
   return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* Outer glow ring */}
+    <div
+      className="relative"
+      style={{
+        width: size,
+        height: size,
+        // The whole wheel sits in 3D perspective so a small rotateX tilt reads
+        // as real depth (camera looking slightly down).
+        perspective: `${size * 2.4}px`,
+        perspectiveOrigin: '50% 40%',
+      }}
+    >
+      {/* Outer glow ring — slow conic sweep tied into the active accent palette */}
       <div
-        className="absolute -inset-8 rounded-full opacity-70 blur-2xl"
+        className="absolute -inset-10 rounded-full opacity-70 blur-2xl pointer-events-none"
         style={{
           background:
-            'conic-gradient(from 0deg, rgba(216,168,78,0.5), rgb(var(--accent-rgb) / 0.5), rgb(var(--accent-2-rgb) / 0.5), rgba(216,168,78,0.5))',
+            'conic-gradient(from 0deg, rgba(216,168,78,0.55), rgb(var(--accent-rgb) / 0.5), rgb(var(--accent-2-rgb) / 0.5), rgba(216,168,78,0.55))',
         }}
       />
 
-      {/* Oval ground shadow — soft horizontal ellipse below the wheel that
-          sells the idea of a heavy disc sitting on a stage floor. Pure CSS. */}
+      {/* Oval ground shadow — sells the disc sitting on a stage floor */}
       <div
         aria-hidden
         className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
         style={{
-          width: size * 0.9,
-          height: size * 0.18,
-          bottom: -size * 0.08,
+          width: size * 0.95,
+          height: size * 0.22,
+          bottom: -size * 0.1,
           background:
-            'radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.35) 35%, transparent 70%)',
-          filter: 'blur(14px)',
+            'radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.42) 35%, transparent 70%)',
+          filter: 'blur(18px)',
         }}
       />
 
-      {/* Pointer */}
-      <div className="absolute left-1/2 -top-3 z-20 -translate-x-1/2">
+      {/* Pointer — gold spear with cabochon dot underneath */}
+      <div className="absolute left-1/2 -top-4 z-30 -translate-x-1/2">
         <div
-          className="size-0 border-x-[22px] border-x-transparent border-b-[36px]"
-          style={{ borderBottomColor: '#FFE7A3', filter: 'drop-shadow(0 6px 16px rgba(216,168,78,0.8))' }}
+          className="size-0 border-x-[24px] border-x-transparent border-b-[40px]"
+          style={{
+            borderBottomColor: '#FFE7A3',
+            filter: 'drop-shadow(0 8px 18px rgba(216,168,78,0.85))',
+          }}
         />
-        <div className="absolute left-1/2 top-9 -translate-x-1/2 size-4 rounded-full bg-gold shadow-gold-glow" />
+        <div className="absolute left-1/2 top-10 -translate-x-1/2 size-5 rounded-full bg-gold shadow-gold-glow" />
       </div>
 
-      {/* Rim — a darker outer ring + lighter inner band sit between the disc
-          and the glow, giving the wheel a real bezel like a luxury timepiece. */}
+      {/* TILT WRAPPER — every layered element inside gets the same 3D tilt so
+          shadows, gradients, and rim stay in registration when the wheel spins. */}
       <div
-        aria-hidden
-        className="absolute inset-0 rounded-full pointer-events-none"
+        className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(circle, transparent 64%, rgba(0,0,0,0.5) 66%, rgba(0,0,0,0.55) 70%, rgba(216,168,78,0.3) 73%, rgba(255,231,163,0.45) 76%, transparent 78%)',
-          boxShadow:
-            'inset 0 -10px 24px rgba(0,0,0,0.5), inset 0 12px 24px rgba(255,231,163,0.15)',
-        }}
-      />
-
-      {/* Wheel disc */}
-      <motion.div
-        animate={controls}
-        className="absolute inset-0 rounded-full overflow-hidden"
-        style={{
-          background: conic,
-          willChange: 'transform',
-          border: '8px solid #d8a84e',
-          // Layered shadows: outer halo + inner darken (vignette toward edges) +
-          // top inner highlight to imply ambient overhead light + bottom dark
-          // to imply contact shadow under the disc.
-          boxShadow:
-            '0 0 60px rgba(216,168,78,0.5), 0 24px 60px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.6), inset 0 12px 32px rgba(255,231,163,0.18), inset 0 -16px 40px rgba(0,0,0,0.45)',
+          transform: 'rotateX(14deg)',
+          transformStyle: 'preserve-3d',
         }}
       >
-        {segments.map((g, i) => {
-          const center = i * segAngle + segAngle / 2;
-          return (
+        {/* Rim — luxury watch bezel: dark outer + gold band + inner shadow */}
+        <div
+          aria-hidden
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(circle, transparent 64%, rgba(0,0,0,0.55) 66%, rgba(0,0,0,0.6) 70%, rgba(216,168,78,0.42) 73%, rgba(255,231,163,0.55) 76%, rgba(216,168,78,0.3) 78%, transparent 80%)',
+            boxShadow:
+              'inset 0 -12px 28px rgba(0,0,0,0.55), inset 0 14px 28px rgba(255,231,163,0.2), 0 30px 80px rgba(0,0,0,0.55)',
+          }}
+        />
+
+        {/* The spinning disc */}
+        <motion.div
+          animate={controls}
+          className="absolute inset-0 rounded-full overflow-hidden"
+          style={{
+            background: conic,
+            willChange: 'transform',
+            border: '10px solid #d8a84e',
+            transformStyle: 'preserve-3d',
+            boxShadow:
+              '0 0 70px rgba(216,168,78,0.55), 0 28px 70px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.65), inset 0 14px 36px rgba(255,231,163,0.22), inset 0 -18px 44px rgba(0,0,0,0.5)',
+          }}
+        >
+          {/* Per-segment subtle darker wedge to add depth — sits under the labels */}
+          {segments.map((_, i) => {
+            const from = i * segAngle;
+            const to = (i + 1) * segAngle;
+            return (
+              <div
+                key={`wedge-${i}`}
+                aria-hidden
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `conic-gradient(from -90deg, transparent ${from}deg, rgba(0,0,0,${
+                    i % 2 === 0 ? 0.12 : 0
+                  }) ${from}deg ${to}deg, transparent ${to}deg)`,
+                }}
+              />
+            );
+          })}
+
+          {/* Spokes — thin gold dividers between segments */}
+          {segments.map((_, i) => (
             <div
-              key={g.id}
-              className="absolute left-1/2 top-1/2"
+              key={`spoke-${i}`}
+              className="absolute left-1/2 top-1/2 origin-bottom h-1/2 w-px"
               style={{
-                transform: `translate(-50%, -50%) rotate(${center}deg) translateY(-${size * 0.32}px)`,
-                width: 200,
-                textAlign: 'center',
+                transform: `translateX(-50%) rotate(${i * segAngle}deg)`,
+                background:
+                  'linear-gradient(to top, rgba(255,231,163,0.05), rgba(255,231,163,0.6) 60%, rgba(255,231,163,0.9))',
+                boxShadow: '0 0 6px rgba(255,231,163,0.5)',
+              }}
+            />
+          ))}
+
+          {/* Radial labels — text reads from rim toward hub along each segment */}
+          {segments.map((g, i) => {
+            const center = i * segAngle + segAngle / 2;
+            // Each label sits in a rotated box whose +X axis points outward
+            // along the segment, anchored at the wheel centre. The text is
+            // pushed against the outer edge (textAlign: right with dir rtl
+            // = first letter at the rim) and limited to one line.
+            const fontPx = Math.max(20, Math.round(size * 0.052));
+            return (
+              <div
+                key={g.id}
+                className="absolute left-1/2 top-1/2 pointer-events-none"
+                dir="rtl"
+                style={{
+                  // Pivot is at the wheel centre; rotate so the label runs
+                  // along the radial axis.
+                  transformOrigin: '0 0',
+                  transform: `rotate(${center - 90}deg) translate(${labelOffset}px, -${
+                    fontPx * 0.7
+                  }px)`,
+                  width: labelLength,
+                  height: fontPx * 1.4,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  paddingInlineEnd: 18,
+                  textShadow:
+                    '0 2px 8px rgba(0,0,0,0.85), 0 0 14px rgba(255,231,163,0.35)',
+                }}
+              >
+                <span
+                  className="font-display font-black whitespace-nowrap"
+                  style={{
+                    fontSize: fontPx,
+                    lineHeight: 1,
+                    letterSpacing: '-0.01em',
+                    // Subtle gold gradient on the text — adds richness without
+                    // hurting legibility, since we keep a deep shadow underneath.
+                    background:
+                      'linear-gradient(180deg, #fff9e5 0%, #ffe7a3 45%, #d8a84e 100%)',
+                    WebkitBackgroundClip: 'text',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                    // Outline-style stroke for legibility against the segment color
+                    WebkitTextStroke: '0.5px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  {g.title}
+                </span>
+              </div>
+            );
+          })}
+        </motion.div>
+
+        {/* Studio top-light — a static soft highlight that lives ABOVE the
+            spinning disc, so as the wheel turns the light source stays put
+            (it's a photo-realistic cheat that sells the 3D illusion). */}
+        <div
+          aria-hidden
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse at 50% 18%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 38%)',
+            mixBlendMode: 'screen',
+          }}
+        />
+
+        {/* Hub — polished gold cabochon */}
+        <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+          <div className="relative">
+            <div
+              className="rounded-full flex items-center justify-center p-4"
+              style={{
+                width: size * 0.22,
+                height: size * 0.22,
+                background:
+                  'radial-gradient(circle at 35% 25%, #fff7dc 0%, #ffe7a3 18%, #d8a84e 55%, #9c7732 100%)',
+                boxShadow:
+                  '0 0 0 1px rgba(255,231,163,0.65), 0 10px 28px rgba(0,0,0,0.65), 0 20px 56px rgba(216,168,78,0.5), inset 0 3px 5px rgba(255,255,255,0.9), inset 0 -10px 18px rgba(120,75,20,0.65)',
               }}
             >
-              <div className="text-white font-display font-black text-2xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]">
-                {g.title}
-              </div>
+              <Logo size="md" className="brightness-0" />
             </div>
-          );
-        })}
-
-        {/* Spokes */}
-        {segments.map((_, i) => (
-          <div
-            key={`spoke-${i}`}
-            className="absolute left-1/2 top-1/2 origin-bottom h-1/2 w-px bg-white/15"
-            style={{ transform: `translateX(-50%) rotate(${i * segAngle}deg)` }}
-          />
-        ))}
-      </motion.div>
-
-      {/* Hub — looks like a polished gold cabochon. Highlight at the top,
-          deeper shadow at the bottom, inset ring on the bezel. */}
-      <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
-        <div className="relative">
-          <div
-            className="size-32 rounded-full flex items-center justify-center p-4"
-            style={{
-              background:
-                'radial-gradient(circle at 35% 25%, #fff7dc 0%, #ffe7a3 18%, #d8a84e 55%, #9c7732 100%)',
-              boxShadow:
-                '0 0 0 1px rgba(255,231,163,0.6), 0 8px 24px rgba(0,0,0,0.6), 0 16px 48px rgba(216,168,78,0.45), inset 0 2px 4px rgba(255,255,255,0.85), inset 0 -8px 16px rgba(120,75,20,0.6)',
-            }}
-          >
-            <Logo size="md" className="brightness-0" />
+            <div className="absolute inset-0 rounded-full ring-4 ring-white/30" />
           </div>
-          <div className="absolute inset-0 rounded-full ring-4 ring-white/30" />
         </div>
       </div>
     </div>
