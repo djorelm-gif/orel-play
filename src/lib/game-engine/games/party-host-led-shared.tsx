@@ -5,9 +5,11 @@
 // are no per-question rounds; the host runs the game out loud and uses the
 // stage / phone screens as visual aids and pacing tools.
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { patchLiveSession } from '@/lib/game-engine/host-actions';
 import { haptic } from '@/lib/haptics';
+import type { EventType } from '@/types/event';
 import type { StageProps, PlayerProps, HostControlsProps } from '../types';
 
 interface PartyConfig {
@@ -22,10 +24,49 @@ interface PartyConfig {
   hostNotes?: string[];
 }
 
+// Gender-aware winner title — feminine for bat mitzvah, masculine for bar.
+function winnerLabel(eventType: EventType): string {
+  return eventType === 'bat_mitzvah' ? 'המנצחת' : 'המנצח';
+}
+
+interface PartyPayload {
+  winner_name?: string;
+}
+
 export function makePartyStage(cfg: PartyConfig) {
-  return function Stage({ liveSession }: StageProps) {
+  return function Stage({ event, liveSession }: StageProps) {
     const intro = liveSession.stage_state === 'GAME_INTRO';
     const reveal = liveSession.stage_state === 'GAME_RESULTS';
+    const payload = (liveSession.current_payload ?? {}) as PartyPayload;
+    const winnerName = payload.winner_name?.trim();
+
+    // Winner reveal: dominates the stage when the host has declared someone.
+    if (reveal && winnerName) {
+      return (
+        <div className="relative z-10 flex h-full items-center justify-center px-12">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 240, damping: 18 }}
+            className="text-center space-y-8"
+          >
+            <div className="text-8xl leading-none" aria-hidden>
+              👑
+            </div>
+            <div className="font-display font-black text-gold-light tracking-wide" style={{ fontSize: 'clamp(40px, 5vw, 80px)' }}>
+              {winnerLabel(event.event_type)}
+            </div>
+            <div
+              className="font-display font-black gold-shimmer leading-none"
+              style={{ fontSize: 'clamp(80px, 12vw, 200px)' }}
+            >
+              {winnerName}
+            </div>
+            <div className="stage-subheadline text-muted">כל הכבוד!</div>
+          </motion.div>
+        </div>
+      );
+    }
 
     return (
       <div className="relative z-10 grid h-full grid-cols-12 gap-10 px-12 py-10">
@@ -71,7 +112,10 @@ export function makePartyStage(cfg: PartyConfig) {
 }
 
 export function makePartyPlayer(cfg: PartyConfig) {
-  return function PlayerCmp({ liveSession }: PlayerProps) {
+  return function PlayerCmp({ event, liveSession }: PlayerProps) {
+    const payload = (liveSession.current_payload ?? {}) as PartyPayload;
+    const winnerName = payload.winner_name?.trim();
+    const isResults = liveSession.stage_state === 'GAME_RESULTS';
     return (
       <div className="space-y-4">
         <div className="rounded-3xl p-6 text-center space-y-3 panel-strong">
@@ -89,9 +133,9 @@ export function makePartyPlayer(cfg: PartyConfig) {
           ))}
         </div>
         <div className="panel p-4 text-center text-base text-muted">{cfg.playerNote}</div>
-        {liveSession.stage_state === 'GAME_RESULTS' && (
+        {isResults && (
           <div className="rounded-3xl p-5 text-center text-2xl font-bold panel-strong text-gold-light">
-            🎉 כל הכבוד! המנחה מכריז/ה על הזוכים
+            {winnerName ? `👑 ${winnerLabel(event.event_type)}: ${winnerName}` : '🎉 כל הכבוד! המנחה מכריז/ה על הזוכים'}
           </div>
         )}
       </div>
@@ -100,13 +144,31 @@ export function makePartyPlayer(cfg: PartyConfig) {
 }
 
 export function makePartyHost(cfg: PartyConfig) {
-  return function Host({ event, liveSession }: HostControlsProps) {
+  return function Host({ event, liveSession, players }: HostControlsProps) {
+    const payload = (liveSession.current_payload ?? {}) as PartyPayload;
+    const [winnerName, setWinnerName] = useState<string>(payload.winner_name ?? '');
+
     async function run(patch: Record<string, unknown>) {
       haptic('light');
       await patchLiveSession(event.event_code, patch);
     }
 
+    // Declare a winner and flip the stage to results. Free-text wins over the
+    // dropdown choice — physical-game winners are often guests who aren't even
+    // logged into the app.
+    async function declareWinner() {
+      const trimmed = winnerName.trim();
+      if (!trimmed) return;
+      haptic('medium');
+      await patchLiveSession(event.event_code, {
+        stage_state: 'GAME_RESULTS',
+        current_payload: { ...payload, winner_name: trimmed },
+      });
+    }
+
     const stage = liveSession.stage_state;
+    const activePlayers = players.filter((p) => p.status === 'active' && !p.is_child_star);
+
     return (
       <div className="space-y-3">
         <div className="text-xs text-muted">{cfg.title}</div>
@@ -118,6 +180,41 @@ export function makePartyHost(cfg: PartyConfig) {
             ))}
           </div>
         )}
+
+        <div className="panel p-3 space-y-2">
+          <div className="text-xs text-muted">{`שם ${winnerLabel(event.event_type)}`}</div>
+          <input
+            type="text"
+            value={winnerName}
+            onChange={(e) => setWinnerName(e.target.value)}
+            placeholder="הקלד/י שם, או בחר/י מהרשימה"
+            className="w-full rounded-lg bg-white/10 border border-white/15 px-3 py-2 text-end"
+          />
+          {activePlayers.length > 0 && (
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) setWinnerName(e.target.value);
+              }}
+              className="w-full rounded-lg bg-white/10 border border-white/15 px-3 py-2 text-end"
+            >
+              <option value="">— בחר/י מבין השחקנים —</option>
+              {activePlayers.map((p) => (
+                <option key={p.id} value={p.display_name}>
+                  {p.display_name}
+                </option>
+              ))}
+            </select>
+          )}
+          <button
+            className="btn-gold w-full"
+            onClick={declareWinner}
+            disabled={!winnerName.trim()}
+          >
+            👑 הכרז על {winnerName.trim() || 'מנצח/ת'}
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-2">
           <button
             className="btn-gold"
