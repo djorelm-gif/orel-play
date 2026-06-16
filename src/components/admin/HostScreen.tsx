@@ -8,6 +8,7 @@ import { WheelControls } from './WheelControls';
 import { GameBuilder } from './GameBuilder';
 import { PlayerList } from './PlayerList';
 import { BatMitzvahLinkCard } from './BatMitzvahLinkCard';
+import { SongLeaderboard } from './SongLeaderboard';
 import { ModerationQueue } from '@/components/moderation/ModerationQueue';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { Logo } from '@/components/ui/Logo';
@@ -50,9 +51,35 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
 
   // Right-column sub-tabs. Greetings opens automatically when something needs
   // moderating so the host doesn't miss a queue.
-  const [rightTab, setRightTab] = useState<'greetings' | 'players' | 'builder' | 'wizard'>(
+  const [rightTab, setRightTab] = useState<'greetings' | 'players' | 'builder' | 'wizard' | 'songs'>(
     pendingCount > 0 ? 'greetings' : 'players',
   );
+  const [songCount, setSongCount] = useState(0);
+
+  // Lightweight totals poll for the songs tab badge — much cheaper than
+  // hauling the full leaderboard whenever the tab is closed.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCount() {
+      try {
+        const res = await fetch(
+          `/api/events/${snap.event.event_code}/songs?limit=1`,
+          { cache: 'no-store' },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { total: number };
+        if (!cancelled) setSongCount(data.total ?? 0);
+      } catch {
+        /* ignore */
+      }
+    }
+    loadCount();
+    const id = setInterval(loadCount, 6000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [snap.event.event_code]);
 
   return (
     <div className="h-screen overflow-hidden p-3 flex flex-col gap-3 stage-vignette">
@@ -153,6 +180,9 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
             <RightTab active={rightTab === 'builder'} onClick={() => setRightTab('builder')}>
               משחקים
             </RightTab>
+            <RightTab active={rightTab === 'songs'} onClick={() => setRightTab('songs')}>
+              🎵 שירים{songCount > 0 ? ` (${songCount})` : ''}
+            </RightTab>
           </nav>
           <div className="panel-strong p-3 flex-1 min-h-0 overflow-y-auto scrollbar-fancy">
             {rightTab === 'greetings' && (
@@ -169,6 +199,7 @@ export function HostScreen({ initial }: { initial: AdminSnapshot }) {
                 />
               </div>
             )}
+            {rightTab === 'songs' && <SongLeaderboard event={snap.event} />}
           </div>
         </section>
       </div>

@@ -11,6 +11,7 @@ import { getAudio } from '@/lib/audio';
 import { notify } from '@/lib/notifications';
 import { haptic } from '@/lib/haptics';
 import { compressImage } from '@/lib/image';
+import { SongPicker } from '@/components/player/SongPicker';
 import type { OrelEvent } from '@/types/event';
 import type { LiveSession, StageState } from '@/types/live-session';
 import type { Player } from '@/types/player';
@@ -198,6 +199,10 @@ export function PlayerLive({ eventCode, initial }: { eventCode: string; initial:
           </div>
         </div>
       </header>
+
+      {token && (state === 'JOIN_SCREEN' || state === 'GREETINGS_WALL' || state === 'BREAK_SCREEN') && (
+        <SongPicker eventCode={eventCode} token={token} me={me} />
+      )}
 
       <ParticipateToggle me={me} token={token} onLocalChange={(next) => setMe({ ...me, wants_to_participate: next })} />
 
