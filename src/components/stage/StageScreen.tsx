@@ -7,6 +7,7 @@ import { StageBackdrop } from '@/components/ui/StageBackdrop';
 import { JoinScreen } from './JoinScreen';
 import { GreetingsWall } from './GreetingsWall';
 import { WheelStage } from './WheelStage';
+import { Leaderboard } from './Leaderboard';
 import { Confetti } from '@/components/ui/Confetti';
 import { MuteToggle } from '@/components/ui/MuteToggle';
 import { FullscreenButton } from '@/components/ui/FullscreenButton';
@@ -163,13 +164,7 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
             </div>
           )}
           {state === 'FINAL_SCREEN' && (
-            <div className="relative z-10 flex h-full items-center justify-center text-center">
-              <div className="space-y-6">
-                <div className="text-8xl">🎉</div>
-                <h1 className="stage-headline font-display gold-shimmer">תודה שהייתם איתנו</h1>
-                <p className="stage-subheadline text-muted">{snap.event.name}</p>
-              </div>
-            </div>
+            <FinalScreen event={snap.event} players={snap.players} />
           )}
         </motion.div>
       </AnimatePresence>
@@ -186,6 +181,32 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
       <div className="absolute bottom-4 end-6 z-20 flex items-center gap-2">
         <MuteToggle />
         <FullscreenButton />
+      </div>
+    </div>
+  );
+}
+
+function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }) {
+  return (
+    <div className="relative z-10 h-full overflow-y-auto scrollbar-fancy">
+      <div className="min-h-full flex flex-col items-center justify-start gap-10 px-12 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+          className="text-center space-y-4"
+        >
+          <h1
+            className="font-display font-black gold-shimmer leading-none"
+            style={{ fontSize: 'clamp(72px, 11vw, 180px)' }}
+          >
+            {event.child_name}
+          </h1>
+          <div className="stage-headline font-display gold-shimmer">תודה!</div>
+          <p className="stage-subheadline text-muted">{event.name}</p>
+        </motion.div>
+
+        <Leaderboard players={players} eventType={event.event_type} />
       </div>
     </div>
   );
