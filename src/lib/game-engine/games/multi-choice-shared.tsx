@@ -6,6 +6,7 @@ import { StageQuestion } from '@/components/games/shared/StageQuestion';
 import { AnswerTally } from '@/components/games/shared/AnswerTally';
 import { OptionGrid } from '@/components/games/shared/OptionGrid';
 import { HostQuestionControls } from '@/components/games/shared/HostQuestionControls';
+import { AnswerRevealFX } from '@/components/stage/fx/AnswerRevealFX';
 import type { StageProps, PlayerProps, HostControlsProps } from '../types';
 
 export function makeStage(kicker: string) {
@@ -41,8 +42,15 @@ export function makeStage(kicker: string) {
     }
 
     const payload = (liveSession.current_payload ?? {}) as { activated_at?: string };
+    const correctLabel = question.options.find((o) => o.id === question.correct_answer)?.label
+      ?? question.correct_answer ?? '';
     return (
       <div className="relative z-10 grid h-full grid-cols-12 gap-10 px-14 py-10">
+        {/* TA-DA reveal — full-screen radial flash + sparkler rays + the
+            correct answer stamped huge in the centre. Fires on transition
+            into GAME_RESULTS and self-clears after ~1.2s. */}
+        <AnswerRevealFX active={reveal} label={correctLabel || undefined} />
+
         <div className="col-span-7 flex flex-col justify-center gap-8">
           <StageQuestion
             kicker={kicker}
@@ -54,12 +62,11 @@ export function makeStage(kicker: string) {
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.9, type: 'spring', stiffness: 220, damping: 22 }}
               className="panel-strong px-8 py-6 inline-flex items-center gap-4 self-start"
             >
               <div className="text-muted text-sm">התשובה הנכונה</div>
-              <div className="text-4xl font-display text-success font-black">
-                {question.options.find((o) => o.id === question.correct_answer)?.label ?? question.correct_answer}
-              </div>
+              <div className="text-4xl font-display text-success font-black">{correctLabel}</div>
             </motion.div>
           )}
         </div>

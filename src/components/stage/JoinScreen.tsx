@@ -1,11 +1,11 @@
 'use client';
 
 import { QRCodeSVG } from 'qrcode.react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { OrelEvent } from '@/types/event';
 import type { Player } from '@/types/player';
-import { Avatar } from '@/components/ui/Avatar';
 import { Logo } from '@/components/ui/Logo';
+import { NameTicker } from './fx/NameTicker';
 
 interface JoinScreenProps {
   event: OrelEvent;
@@ -14,9 +14,8 @@ interface JoinScreenProps {
 }
 
 export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
-  const recent = players.slice(-8).reverse();
   return (
-    <div className="relative z-10 grid h-full grid-cols-12 gap-12 px-12 py-10">
+    <div className="relative z-10 grid h-full grid-cols-12 gap-12 px-12 py-10 pb-24">
       <div className="col-span-7 flex flex-col justify-center gap-8">
         <div className="space-y-5">
           <Logo size="md" className="h-12" />
@@ -45,27 +44,6 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
             <div className="text-xs text-muted">מצטרפים</div>
             <div className="text-4xl font-display font-black text-gold-light">{players.length}</div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
-          <span>שמות שהצטרפו עכשיו:</span>
-          <AnimatePresence mode="popLayout">
-            {recent.length === 0 && <span className="text-muted/70">עוד אין... תהיו הראשונים</span>}
-            {recent.map((p) => (
-              <motion.div
-                key={p.id}
-                layout
-                initial={{ opacity: 0, scale: 0.7, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.7 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                className="flex items-center gap-2 rounded-full bg-white/8 ps-1.5 pe-3 py-1 border border-white/10"
-              >
-                <Avatar name={p.display_name} photoUrl={p.photo_url} size="sm" />
-                <span className="text-white font-semibold">{p.display_name}</span>
-              </motion.div>
-            ))}
-          </AnimatePresence>
         </div>
       </div>
 
@@ -116,6 +94,15 @@ export function JoinScreen({ event, players, joinUrl }: JoinScreenProps) {
           </div>
         </motion.div>
       </div>
+
+      {/* Live ticker — gold ribbon along the bottom with all joined guests
+          marqueeing in a seamless RTL loop. Replaces the static "names so
+          far" chip row that used to sit in the left column. */}
+      {players.length > 0 && (
+        <div className="absolute inset-x-0 bottom-0 z-20">
+          <NameTicker players={players} />
+        </div>
+      )}
     </div>
   );
 }
