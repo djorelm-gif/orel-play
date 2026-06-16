@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { dataSource } from '@/lib/data-source';
+import { pushToPlayer } from '@/lib/push-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,6 +45,18 @@ export async function POST(req: Request, ctx: { params: { code: string } }) {
   await dataSource.updateLiveSession(event.id, {
     current_payload: { active_mission_id: mission.id, assigned_to_player_id: targetPlayerId },
   });
+
+  // Best-effort: ring the assigned player's phone even if their screen is off.
+  // Mirrors the in-tab notify(...) text in PlayerLive.
+  try {
+    await pushToPlayer(targetPlayerId, {
+      title: '🤫 משימה חשאית!',
+      body: 'פתח/י את האפליקציה — קיבלת משימה רק בשבילך.',
+      tag: `mission:${mission.id}`,
+    });
+  } catch {
+    /* swallow — push must never break the mission assignment */
+  }
 
   return NextResponse.json({ mission });
 }
