@@ -206,7 +206,7 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
             // along the segment, anchored at the wheel centre. The text is
             // pushed against the outer edge (textAlign: right with dir rtl
             // = first letter at the rim) and limited to one line.
-            const fontPx = Math.max(20, Math.round(size * 0.052));
+            const fontPx = Math.max(24, Math.round(size * 0.064));
             return (
               <div
                 key={g.id}
@@ -225,8 +225,6 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
                   alignItems: 'center',
                   justifyContent: 'flex-end',
                   paddingInlineEnd: 18,
-                  textShadow:
-                    '0 2px 8px rgba(0,0,0,0.85), 0 0 14px rgba(255,231,163,0.35)',
                 }}
               >
                 <span
@@ -235,15 +233,14 @@ export function Wheel({ games, selectedGameId, isSpinning, onSpinComplete, size 
                     fontSize: fontPx,
                     lineHeight: 1,
                     letterSpacing: '-0.01em',
-                    // Subtle gold gradient on the text — adds richness without
-                    // hurting legibility, since we keep a deep shadow underneath.
-                    background:
-                      'linear-gradient(180deg, #fff9e5 0%, #ffe7a3 45%, #d8a84e 100%)',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                    // Outline-style stroke for legibility against the segment color
-                    WebkitTextStroke: '0.5px rgba(0,0,0,0.4)',
+                    // Solid ivory text — the cleanest, most legible choice on
+                    // top of the rotating accent segments. A thick black
+                    // outline + deep shadow keep it readable on every colour
+                    // the conic gradient throws underneath.
+                    color: '#fffaf0',
+                    WebkitTextStroke: '1.6px rgba(0,0,0,0.92)',
+                    textShadow:
+                      '0 3px 10px rgba(0,0,0,0.95), 0 6px 22px rgba(0,0,0,0.7)',
                   }}
                 >
                   {g.title}
