@@ -41,6 +41,9 @@ export function HostQuestionControls({ eventCode, liveSession, questions, answer
             run({
               stage_state: 'GAME_ACTIVE',
               active_question_id: next?.id ?? liveSession.active_question_id,
+              // Stamp the moment the question went live so the stage can
+              // drive a visible 30s countdown.
+              current_payload: { ...liveSession.current_payload, activated_at: new Date().toISOString() },
             })
           }
         >

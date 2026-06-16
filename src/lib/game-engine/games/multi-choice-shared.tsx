@@ -40,10 +40,16 @@ export function makeStage(kicker: string) {
       );
     }
 
+    const payload = (liveSession.current_payload ?? {}) as { activated_at?: string };
     return (
       <div className="relative z-10 grid h-full grid-cols-12 gap-10 px-14 py-10">
         <div className="col-span-7 flex flex-col justify-center gap-8">
-          <StageQuestion kicker={kicker} question={question.question_text} />
+          <StageQuestion
+            kicker={kicker}
+            question={question.question_text}
+            activatedAt={payload.activated_at ?? null}
+            active={liveSession.stage_state === 'GAME_ACTIVE'}
+          />
           {reveal && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
