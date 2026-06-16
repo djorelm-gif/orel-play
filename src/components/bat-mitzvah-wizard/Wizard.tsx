@@ -181,10 +181,12 @@ export function Wizard({ token, childName, eventType, initialAnswers, initialInd
             animate="center"
             exit="exit"
             transition={{ type: 'spring', stiffness: 340, damping: 30, mass: 0.7 }}
-            className="w-full max-w-xl panel-strong p-7 space-y-5"
+            className="w-full max-w-xl panel-3d p-7 space-y-5"
           >
-            <div className="text-5xl">{prompt.emoji}</div>
-            <h2 className="text-3xl font-display font-black text-balance leading-snug">{questionText}</h2>
+            <div className="text-5xl drop-shadow-[0_6px_16px_rgba(216,168,78,0.35)]">{prompt.emoji}</div>
+            <h2 className="text-3xl font-editorial font-black text-balance leading-snug">
+              {questionText}
+            </h2>
             {helperText && <p className="text-muted text-base">{helperText}</p>}
 
             <PromptInput prompt={prompt} value={value} onChange={handleChange} eventType={eventType} />
@@ -224,53 +226,89 @@ function IntroScreen({
   onStart: () => void;
 }) {
   const isF = eventType !== 'bar_mitzvah';
+  // iOS app-launch staggered entry:
+  //   1) logo zooms from blur (180ms)
+  //   2) sparkle emoji pops with overshoot (+100ms)
+  //   3) "היי X" headline springs in (+100ms)
+  //   4) body text fades up (+100ms)
+  //   5) CTA fades up (+100ms)
   return (
     <div className="min-h-screen stage-vignette flex items-center justify-center p-5">
       <motion.div
-        initial={{ scale: 0.85, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.55, ease: 'backOut' }}
-        className="panel-strong p-8 md:p-10 max-w-xl w-full text-center space-y-6"
+        initial={{ scale: 0.9, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="panel-3d p-8 md:p-10 max-w-xl w-full text-center space-y-6"
       >
-        <div className="flex justify-center">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0, filter: 'blur(12px)' }}
+          animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.05 }}
+          className="flex justify-center"
+        >
           <Logo size="md" />
-        </div>
+        </motion.div>
 
-        <div className="text-7xl select-none">✨</div>
+        <motion.div
+          initial={{ scale: 0, rotate: -8 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 14, delay: 0.18 }}
+          className="text-7xl select-none drop-shadow-[0_8px_20px_rgba(216,168,78,0.45)]"
+        >
+          ✨
+        </motion.div>
 
-        <h1 className="text-4xl md:text-5xl font-display font-black gold-shimmer leading-tight">
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 22, delay: 0.32 }}
+          className="text-4xl md:text-5xl font-editorial font-black gold-shimmer leading-tight"
+        >
           היי {childName}!
-        </h1>
+        </motion.h1>
 
-        <p className="text-xl text-balance leading-relaxed">
-          {isF
-            ? 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'
-            : 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'}
-        </p>
-
-        <div className="space-y-3 text-muted text-base text-balance leading-relaxed">
-          <p>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.45 }}
+          className="space-y-4"
+        >
+          <p className="text-xl text-balance leading-relaxed">
             {isF
-              ? `${total} שאלות קצרות עלייך — האוכל שאת אוהבת, החברות שלך, הרגלים מצחיקים, חלומות.`
-              : `${total} שאלות קצרות עליך — האוכל שאתה אוהב, החברים שלך, הרגלים מצחיקים, חלומות.`}
+              ? 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'
+              : 'האירוע שלך כבר ממש קרוב — ובאנו לעשות אותו הכי ממך שאפשר.'}
           </p>
-          <p>
-            {isF
-              ? 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עלייך, יצחקו ויתרגשו.'
-              : 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עליך, יצחקו ויתרגשו.'}
-          </p>
-          <p className="text-sm">
-            {isF
-              ? 'אין תשובות נכונות. תהיי כנה ופשוט תהיי את. הכל נשמר אוטומטית.'
-              : 'אין תשובות נכונות. תהיה כן ופשוט תהיה אתה. הכל נשמר אוטומטית.'}
-          </p>
-        </div>
 
-        <button className="btn-gold w-full text-lg py-4" onClick={onStart}>
-          יאללה, מתחילים ✨
-        </button>
+          <div className="space-y-3 text-muted text-base text-balance leading-relaxed">
+            <p>
+              {isF
+                ? `${total} שאלות קצרות עלייך — האוכל שאת אוהבת, החברות שלך, הרגלים מצחיקים, חלומות.`
+                : `${total} שאלות קצרות עליך — האוכל שאתה אוהב, החברים שלך, הרגלים מצחיקים, חלומות.`}
+            </p>
+            <p>
+              {isF
+                ? 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עלייך, יצחקו ויתרגשו.'
+                : 'מהתשובות נבנה שעשועון אישי לאירוע שלך — האורחים יענו עליך, יצחקו ויתרגשו.'}
+            </p>
+            <p className="text-sm">
+              {isF
+                ? 'אין תשובות נכונות. תהיי כנה ופשוט תהיי את. הכל נשמר אוטומטית.'
+                : 'אין תשובות נכונות. תהיה כן ופשוט תהיה אתה. הכל נשמר אוטומטית.'}
+            </p>
+          </div>
+        </motion.div>
 
-        <p className="text-xs text-muted">לוקח 3-5 דקות · אפשר לעצור ולחזור</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1], delay: 0.58 }}
+          className="space-y-2"
+        >
+          <button className="btn-gold w-full text-lg py-4" onClick={onStart}>
+            יאללה, מתחילים ✨
+          </button>
+          <p className="text-xs text-muted">לוקח 3-5 דקות · אפשר לעצור ולחזור</p>
+        </motion.div>
       </motion.div>
     </div>
   );
@@ -397,13 +435,21 @@ function DoneScreen({ childName, eventType }: { childName: string; eventType: Ev
   return (
     <div className="min-h-screen stage-vignette flex items-center justify-center p-6">
       <motion.div
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: 'backOut' }}
-        className="panel-strong p-10 max-w-md text-center space-y-4"
+        initial={{ scale: 0.85, opacity: 0, y: 12 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        className="panel-3d p-10 max-w-md text-center space-y-4"
       >
-        <div className="text-7xl">✨</div>
-        <h1 className="text-4xl font-display font-black gold-shimmer">סיימנו!</h1>
+        <motion.div
+          initial={{ scale: 0, rotate: -8 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.18 }}
+          className="text-7xl drop-shadow-[0_8px_24px_rgba(216,168,78,0.5)]"
+        >
+          ✨
+        </motion.div>
+        <h1 className="text-4xl font-editorial font-black gold-shimmer">סיימנו!</h1>
+        <div className="mx-auto h-px w-24 bg-gradient-to-r from-transparent via-gold to-transparent opacity-80" />
         <p className="text-muted text-lg">
           התשובות נשמרו. עכשיו המערכת תכין שאלות מותאמות אישית לאירוע של {childName}.
         </p>

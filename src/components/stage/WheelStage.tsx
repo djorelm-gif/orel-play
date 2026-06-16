@@ -21,7 +21,7 @@ export function WheelStage({ games, liveSession, childName, onSpinComplete }: Pr
             <span className="size-2 rounded-full bg-magenta animate-pulse" />
             <span className="tracking-[0.3em]">גלגל המזל</span>
           </div>
-          <h1 className="stage-headline font-display gold-shimmer leading-[0.95]">
+          <h1 className="stage-headline-editorial font-editorial gold-shimmer leading-[0.95]">
             איזה משחק
             <br />
             יוצא עכשיו?

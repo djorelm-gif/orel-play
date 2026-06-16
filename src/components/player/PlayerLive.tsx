@@ -398,11 +398,12 @@ function WaitingCard({
 }) {
   return (
     <div
-      className={`rounded-3xl p-8 text-center space-y-2 panel-strong ${
+      className={`rounded-3xl p-8 text-center space-y-3 panel-3d ${
         tone === 'gold' ? 'shadow-gold-glow' : tone === 'magenta' ? 'shadow-magenta-glow' : ''
       }`}
     >
-      <div className="text-3xl font-display font-black gold-shimmer">{title}</div>
+      <div className="text-3xl font-editorial font-black gold-shimmer">{title}</div>
+      <div className="mx-auto h-px w-16 bg-gradient-to-r from-transparent via-gold to-transparent opacity-70" />
       <div className="text-muted text-lg">{subtitle}</div>
     </div>
   );
