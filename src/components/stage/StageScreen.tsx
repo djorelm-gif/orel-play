@@ -8,6 +8,7 @@ import { JoinScreen } from './JoinScreen';
 import { GreetingsWall } from './GreetingsWall';
 import { WheelStage } from './WheelStage';
 import { Leaderboard } from './Leaderboard';
+import { EndSlideshow } from './EndSlideshow';
 import { Confetti } from '@/components/ui/Confetti';
 import { MuteToggle } from '@/components/ui/MuteToggle';
 import { FullscreenButton } from '@/components/ui/FullscreenButton';
@@ -217,7 +218,11 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
             </div>
           )}
           {state === 'FINAL_SCREEN' && (
-            <FinalScreen event={snap.event} players={snap.players} />
+            <FinalScreen
+              event={snap.event}
+              players={snap.players}
+              greetings={snap.approvedGreetings}
+            />
           )}
         </motion.div>
       </AnimatePresence>
@@ -261,21 +266,29 @@ export function StageScreen({ eventCode, joinUrl, initial }: Props) {
   );
 }
 
-function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }) {
+function FinalScreen({
+  event,
+  players,
+  greetings,
+}: {
+  event: OrelEvent;
+  players: Player[];
+  greetings: Greeting[];
+}) {
   return (
     <div className="relative z-10 h-full overflow-y-auto scrollbar-fancy">
-      <div className="min-h-full flex flex-col items-center justify-start gap-12 px-12 py-16">
+      <div className="min-h-full flex flex-col items-center justify-start gap-10 px-12 py-12">
         {/* Editorial hero — gold ribbon-style emblem above, the kid's name in
             a serif display, then a refined "תודה" line. Staggered so the
             elements arrive one after the other like a keynote opening. */}
-        <div className="text-center space-y-6 max-w-5xl">
+        <div className="text-center space-y-5 max-w-5xl">
           <motion.div
             initial={{ scale: 0.4, opacity: 0, rotate: -8 }}
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 220, damping: 18, delay: 0.05 }}
             className="flex justify-center"
           >
-            <RibbonIcon size={88} />
+            <RibbonIcon size={72} />
           </motion.div>
           <motion.div
             initial={{ opacity: 0, scale: 0.7, y: 20, filter: 'blur(20px)' }}
@@ -284,7 +297,7 @@ function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }
           >
             <h1
               className="font-editorial font-black gold-shimmer leading-none"
-              style={{ fontSize: 'clamp(80px, 13vw, 220px)', letterSpacing: '-0.03em' }}
+              style={{ fontSize: 'clamp(64px, 10vw, 180px)', letterSpacing: '-0.03em' }}
             >
               {event.child_name}
             </h1>
@@ -293,7 +306,7 @@ function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.42 }}
-            className="space-y-3"
+            className="space-y-2"
           >
             {/* Thin gold separator — keynote-style hairline above the secondary line. */}
             <div className="mx-auto h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent opacity-80" />
@@ -304,13 +317,26 @@ function FinalScreen({ event, players }: { event: OrelEvent; players: Player[] }
           </motion.div>
         </div>
 
+        {/* Side-by-side: leaderboard on the start side, slideshow on the end.
+            Looks great at 1920×1080 because both halves get ~880px and the
+            slideshow has room to breathe. Falls back to stacked on narrower
+            preview windows. */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.55 }}
-          className="w-full"
+          className="w-full max-w-[1800px] grid grid-cols-1 xl:grid-cols-2 gap-8 items-stretch"
         >
-          <Leaderboard players={players} eventType={event.event_type} />
+          <div className="flex flex-col">
+            <Leaderboard players={players} eventType={event.event_type} />
+          </div>
+          <div className="flex flex-col min-h-[520px]">
+            <EndSlideshow
+              greetings={greetings}
+              players={players}
+              childName={event.child_name}
+            />
+          </div>
         </motion.div>
       </div>
     </div>
