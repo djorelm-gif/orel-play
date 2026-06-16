@@ -30,6 +30,8 @@ const config: Config = {
         // Falls back gracefully to the display sans so nothing breaks if the
         // Google font hasn't loaded yet.
         editorial: ['var(--font-editorial)', 'var(--font-rubik)', 'serif'],
+        // Handcrafted Hebrew display — chips, winner labels, hero accents.
+        accent: ['var(--font-accent)', 'var(--font-rubik)', 'sans-serif'],
       },
       boxShadow: {
         'gold-glow': '0 0 40px rgba(216, 168, 78, 0.45), 0 0 80px rgba(216, 168, 78, 0.18)',
