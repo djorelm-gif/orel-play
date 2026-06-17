@@ -40,7 +40,7 @@ const karantina = Karantina({
 });
 
 export const metadata: Metadata = {
-  title: 'אורל פרודקשנס',
+  title: 'אורל פליי',
   description: 'שעשועון אינטראקטיבי לבת/בר מצווה — סורקים, נכנסים, משחקים.',
   applicationName: 'אורל פליי',
   manifest: '/manifest.webmanifest',
