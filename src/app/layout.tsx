@@ -42,7 +42,21 @@ const karantina = Karantina({
 export const metadata: Metadata = {
   title: 'אורל פרודקשנס',
   description: 'שעשועון אינטראקטיבי לבת/בר מצווה — סורקים, נכנסים, משחקים.',
-  applicationName: 'אורל פרודקשנס',
+  applicationName: 'אורל פליי',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    // The iOS Add-to-Home-Screen treatment: when a guest installs the site
+    // as a PWA, Safari uses this title under the icon and runs the page in
+    // standalone (no browser chrome), which is the only mode where Apple
+    // delivers Web Push notifications when the screen is off.
+    capable: true,
+    title: 'אורל פליי',
+    statusBarStyle: 'black-translucent',
+  },
+  icons: {
+    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icon.svg', sizes: '512x512' }],
+  },
 };
 
 export const viewport: Viewport = {

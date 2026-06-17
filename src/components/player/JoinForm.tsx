@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeApplier } from '@/components/ui/ThemeApplier';
 import { requestNotificationPermission, persistNotificationOptIn } from '@/lib/notifications';
 import { compressImage } from '@/lib/image';
+import { IOSInstallPrompt } from '@/components/ui/IOSInstallPrompt';
 import type { OrelEvent } from '@/types/event';
 import type { PlayerGender } from '@/types/player';
 
@@ -351,40 +352,86 @@ export function JoinForm({ event }: Props) {
             )}
 
             {step === 'done' && (
-              <motion.div
-                key="done"
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: 'spring', stiffness: 280, damping: 20, mass: 0.7 }}
-                className="panel-strong p-8 text-center space-y-5"
-              >
-                <div className="text-6xl">🎉</div>
-                <div className="text-2xl font-display font-black gold-shimmer">הצטרפת למשחק!</div>
-                <div className="space-y-2 pt-2">
-                  <div className="text-lg font-bold">לאשר התראות?</div>
-                  <div className="text-muted text-sm text-balance">
-                    כשהמשחק יתחיל או כשתקבל/י משימה סודית — נשלח התראה לטלפון, גם אם המסך כבוי.
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <button
-                    className="btn-ghost py-3"
-                    onClick={() => handleNotificationChoice(false)}
-                  >
-                    לא תודה
-                  </button>
-                  <button
-                    className="btn-gold py-3"
-                    onClick={() => handleNotificationChoice(true)}
-                  >
-                    אישור התראות ✓
-                  </button>
-                </div>
-              </motion.div>
+              <DoneStep
+                onChoice={handleNotificationChoice}
+              />
             )}
           </AnimatePresence>
         </div>
       </div>
     </div>
+  );
+}
+
+// Post-join CTA. Detects iOS Safari (where Web Push only fires from an
+// installed PWA) and routes those guests to the install instructions
+// instead of letting them tap "approve notifications" and silently get
+// nothing. Android Chrome and installed-PWA iOS get the standard prompt.
+function DoneStep({ onChoice }: { onChoice: (optIn: boolean) => void }) {
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const [iosWebSafari, setIosWebSafari] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const ua = window.navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !('MSStream' in window);
+    const isSafari = !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setIosWebSafari(isIOS && isSafari && !standalone);
+  }, []);
+
+  return (
+    <>
+      <motion.div
+        key="done"
+        initial={{ opacity: 0, scale: 0.7 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 20, mass: 0.7 }}
+        className="panel-strong p-8 text-center space-y-5"
+      >
+        <div className="text-6xl">🎉</div>
+        <div className="text-2xl font-display font-black gold-shimmer">הצטרפת למשחק!</div>
+
+        {iosWebSafari ? (
+          <>
+            <div className="space-y-2 pt-2">
+              <div className="text-lg font-bold">📱 משתמש/ת באייפון?</div>
+              <div className="text-muted text-sm text-balance">
+                כדי לקבל התראות גם כשהמסך כבוי, צריך להתקין את האתר על מסך הבית. לוקח 5
+                שניות.
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button className="btn-ghost py-3" onClick={() => onChoice(false)}>
+                ללא התראות
+              </button>
+              <button className="btn-gold py-3" onClick={() => setShowIOSPrompt(true)}>
+                איך מתקינים? ↗
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-2 pt-2">
+              <div className="text-lg font-bold">לאשר התראות?</div>
+              <div className="text-muted text-sm text-balance">
+                כשהמשחק יתחיל או כשתקבל/י משימה סודית — נשלח התראה לטלפון, גם אם המסך כבוי.
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-2">
+              <button className="btn-ghost py-3" onClick={() => onChoice(false)}>
+                לא תודה
+              </button>
+              <button className="btn-gold py-3" onClick={() => onChoice(true)}>
+                אישור התראות ✓
+              </button>
+            </div>
+          </>
+        )}
+      </motion.div>
+      {showIOSPrompt && <IOSInstallPrompt trigger="open" />}
+    </>
   );
 }

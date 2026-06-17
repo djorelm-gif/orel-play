@@ -1,0 +1,22 @@
+{
+  "name": "אורל פליי — שעשועון אירועים",
+  "short_name": "אורל פליי",
+  "description": "שעשועון אינטראקטיבי לבת/בר מצווה — סורקים, נכנסים, משחקים.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050506",
+  "theme_color": "#050506",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "social", "music"]
+}
